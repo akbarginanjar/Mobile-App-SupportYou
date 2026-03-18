@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:mobile_supportyou/config/theme.dart';
-import 'package:mobile_supportyou/views/home_screen/screen.dart';
+import 'package:mobile_supportyou/views/splash_screen/screen.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -13,9 +14,9 @@ class App extends StatelessWidget {
       // darkTheme: ThemeData.dark(), // Tema gelap
       // theme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
-      title: 'Matrial.id',
-      home: const HomeScreen(),
-      // builder: EasyLoading.init(),
+      title: 'SupportYou',
+      home: const SplashScreen(),
+      builder: EasyLoading.init(),
     );
   }
 }
