@@ -1,81 +1,153 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mobile_supportyou/config/theme.dart';
-import 'package:mobile_supportyou/controllers/auth_controller.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_supportyou/config/theme.dart';
+import 'package:mobile_supportyou/views/widgets/button.dart';
+import 'package:mobile_supportyou/utils/alert.dart';
+import 'package:mobile_supportyou/services/auth_service.dart';
+import 'package:mobile_supportyou/views/login_nohp_screen/screen.dart';
+import 'package:mobile_supportyou/views/main_screen/screen.dart';
 
-class LoginScreen extends StatelessWidget {
-  LoginScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
-  final AuthController authController = Get.put(AuthController());
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
+class _LoginScreenState extends State<LoginScreen> {
+  bool _obscureText = true;
+  GetStorage box = GetStorage();
+  TextEditingController email = TextEditingController();
+  TextEditingController password = TextEditingController();
+  AuthService authService = AuthService();
+  final GlobalKey<FormState> form = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Login"),
-        centerTitle: true,
-      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(height: 40),
-            SizedBox(
-              height: 150,
-              child: Image.asset('assets/logo/supportyou-logo-icon.png'),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Masuk ke SupportYou',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 30),
-
-            // Input Email
-            TextFormField(
-              controller: authController.emailController,
-              decoration: const InputDecoration(
-                hintText: 'Email',
-                prefixIcon: Icon(Icons.email_outlined),
-              ),
-            ),
-            const SizedBox(height: 15),
-
-            // Input Password dengan toggle
-            Obx(() => TextFormField(
-                  controller: authController.passwordController,
-                  obscureText: authController.isLoading.value, // bisa diganti toggle show/hide
-                  decoration: const InputDecoration(
-                    hintText: 'Password',
-                    prefixIcon: Icon(Icons.lock_outline),
-                  ),
-                )),
-            const SizedBox(height: 20),
-
-            // Tombol Login
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  textStyle: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+        child: Padding(
+          padding: const EdgeInsets.all(15),
+          child: Form(
+            key: form,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, bottom: 10),
+                  child: Center(
+                    child: SizedBox(
+                      height: 200,
+                      child: Image.asset('assets/logo/supportyou-logo-icon.png'),
+                    ),
                   ),
                 ),
-                onPressed: () {
-                  authController.login();
-                },
-                child: const Text("Login"),
-              ),
+                Text(
+                  'Masuk',
+                  style: GoogleFonts.poppins(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Silahkan login di SupportYou',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.normal),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: email,
+                  validator: (val) {
+                    if (val!.isEmpty) {
+                      showErrorDialog(
+                        'Email atau Password tidak boleh kosong!',
+                      );
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Email',
+                    prefixIcon: Icon(Icons.person, color: Colors.grey[500]),
+                  ),
+                ),
+                const SizedBox(height: 10,),
+                TextFormField(
+                  controller: password,
+                  obscureText: _obscureText,
+                  validator: (val) {
+                    if (val!.isEmpty) {
+                      showErrorDialog(
+                        'Email atau Password tidak boleh kosong!',
+                      );
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Password',
+                    prefixIcon: Icon(
+                      Icons.lock_outline,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureText
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                DefaultButton(
+                  text: 'Login',
+                  press: () {
+                    if (form.currentState!.validate()) {
+                      authService
+                          .login(email: email.text, password: password.text)
+                          .then((value) {
+                            if (box.read('tokens') != null) {
+                              form.currentState!.reset();
+                              Get.offAll(
+                                const MainScreen(),
+                                transition: Transition.rightToLeft,
+                              );
+                            }
+                          });
+                    }
+                  },
+                  color: primary,
+                ),
+                const SizedBox(height: 10),
+                DefaultButtonOutline(
+                  text: 'Login dengan No HP',
+                  press: () {
+                    Get.off(LoginNoHpScreen());
+                  },
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Anda belum punya akun?'),
+                    TextButton(
+                      onPressed: () {
+                        // Get.to(
+                        //   const RegisterScreen(),
+                        //   transition: Transition.rightToLeftWithFade,
+                        // );
+                      },
+                      child: const Text('Register'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

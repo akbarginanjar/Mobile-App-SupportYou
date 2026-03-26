@@ -5,6 +5,7 @@ import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/home_controller.dart';
 import 'package:mobile_supportyou/views/home_screen/carousel.dart';
 import 'package:mobile_supportyou/views/home_screen/kategori.dart';
+import 'package:mobile_supportyou/views/home_screen/pelatihan.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -35,7 +36,7 @@ class HomeScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(left: 5),
                   child: Image.asset(
-                    'assets/logo/supportyou-logo.jpeg',
+                    'assets/logo/supportyou-logo.png',
                     fit: BoxFit.contain,
                     alignment: Alignment.centerLeft,
                   ),
@@ -132,7 +133,8 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8.0,),
                   const KategoriScreen(),
-                const SizedBox(height: 20.0),
+                  const SizedBox(height: 20.0),
+                  PelatihanScreen(),
               ]),
             ),
           ],

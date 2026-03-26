@@ -10,29 +10,33 @@ ThemeData defaultTheme(BuildContext context) {
 
     // ===== INPUT TEXTFIELD =====
     inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
       hintStyle: const TextStyle(
         fontWeight: FontWeight.normal,
         color: Colors.black54,
       ),
+      prefixIconColor: Colors.black54,
+      suffixIconColor: Colors.black54,
       contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10.0),
+        borderRadius: BorderRadius.circular(15.0),
         borderSide: BorderSide(color: Colors.grey[300]!, width: 1.0),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(15.0),
         borderSide: BorderSide(color: Colors.grey[300]!, width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(15.0),
         borderSide: BorderSide(color: primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10.0),
+        borderRadius: BorderRadius.circular(15.0),
         borderSide: const BorderSide(color: Colors.red, width: 1.0),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10.0),
+        borderRadius: BorderRadius.circular(15.0),
         borderSide: const BorderSide(color: Colors.red, width: 1.0),
       ),
     ),
@@ -59,21 +63,19 @@ ThemeData defaultTheme(BuildContext context) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       textTheme: ButtonTextTheme.primary,
     ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        backgroundColor: primary,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        textStyle: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ),
 
+    // ===== COLOR SCHEME =====
+    colorScheme: ColorScheme.light().copyWith(
+      primary: HexColor('#2390d2'),
+      secondary: HexColor('#c43368'),
+      surface: Colors.white,
+      onSurface: Colors.black87,
+      background: Colors.white,
+      onBackground: Colors.black87,
+      error: Colors.red[800],
+      onPrimary: Colors.white,
+    ),
+    
     // ===== TEXT THEME =====
     textTheme: TextTheme(
       titleLarge: GoogleFonts.poppins(

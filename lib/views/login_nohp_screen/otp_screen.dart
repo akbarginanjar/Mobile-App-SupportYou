@@ -26,7 +26,6 @@ class OtpInputScreen extends StatelessWidget {
               phone,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 10),
             Obx(
               () => controller.countdown.value > 0
@@ -42,14 +41,12 @@ class OtpInputScreen extends StatelessWidget {
                     ),
             ),
             const SizedBox(height: 10),
-
             TextField(
               keyboardType: TextInputType.number,
               maxLength: 6,
               onChanged: controller.updateOtp,
               decoration: const InputDecoration(labelText: 'Masukkan OTP'),
             ),
-
             const SizedBox(height: 10),
             DefaultButton(
               text: 'Verifikasi OTP',
