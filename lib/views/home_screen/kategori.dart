@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_supportyou/config/theme.dart';
 
 class KategoriScreen extends StatelessWidget {
   const KategoriScreen({super.key});
@@ -24,7 +23,7 @@ class KategoriScreen extends StatelessWidget {
                     const Text(
                       "Lihat Semua",
                     ),
-                    const Icon(Icons.chevron_right)
+                    const Icon(Icons.arrow_forward_ios_rounded)
                   ],
                 ),
               ),

@@ -4,8 +4,9 @@ import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/home_controller.dart';
 import 'package:mobile_supportyou/views/home_screen/carousel.dart';
+import 'package:mobile_supportyou/views/home_screen/ebook_section.dart';
 import 'package:mobile_supportyou/views/home_screen/kategori.dart';
-import 'package:mobile_supportyou/views/home_screen/pelatihan.dart';
+import 'package:mobile_supportyou/views/home_screen/pelatihan_section.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -134,7 +135,9 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 8.0,),
                   const KategoriScreen(),
                   const SizedBox(height: 20.0),
-                  PelatihanScreen(),
+                  const PelatihanSection(),
+                  const SizedBox(height: 20.0),
+                  const EbookSection(),
               ]),
             ),
           ],

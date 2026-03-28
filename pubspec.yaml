@@ -70,6 +70,7 @@ flutter:
     - assets/logo/supportyou-logo.png
     - assets/logo/supportyou-logo-icon.png
     - assets/banner/
+    - assets/image/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
