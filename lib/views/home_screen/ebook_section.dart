@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/controllers/ebook_controller.dart';
 import 'package:mobile_supportyou/views/semua_ebook_screen/screen.dart';
-import 'package:mobile_supportyou/views/widgets/ebook_card_vertical.dart';
+import 'package:mobile_supportyou/views/widgets/ebook_card.dart';
 
 class EbookSection extends StatelessWidget {
   const EbookSection({super.key});
@@ -44,11 +44,11 @@ class EbookSection extends StatelessWidget {
 
         // Body list ebook
         Obx(() {
-          if (controller.isLoadingHome.value && controller.ebookList.isEmpty) {
+          if (controller.isLoadingHome.value && controller.ebookListHome.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (controller.ebookList.isEmpty) {
+          if (controller.ebookListHome.isEmpty) {
             return const Center(child: Text('Belum ada ebook'));
           }
 
@@ -56,17 +56,14 @@ class EbookSection extends StatelessWidget {
             height: 291,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: controller.ebookList.length,
+              itemCount: controller.ebookListHome.length,
               itemBuilder: (context, index) {
-                final ebook = controller.ebookList[index];
+                final ebook = controller.ebookListHome[index];
                 return Container(
                   width: 190,
                   margin: const EdgeInsets.only(left: 8),
                   child: EbookCardVertical(
                     ebook: ebook,
-                    onPress: () {
-                      // TODO: navigasi ke detail ebook
-                    },
                   ),
                 );
               },

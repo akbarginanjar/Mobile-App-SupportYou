@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
 import 'package:mobile_supportyou/models/ebook_model.dart';
+import 'package:mobile_supportyou/views/ebook_screen/screen.dart';
 
 class EbookCardVertical extends StatelessWidget {
   final Ebook ebook;
@@ -22,7 +24,7 @@ class EbookCardVertical extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: onPress,
+        onTap: () => Get.to(() => EbookScreen(slug: ebook.id.toString())),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

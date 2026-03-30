@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/ebook_controller.dart';
-import 'package:mobile_supportyou/views/widgets/ebook_card_vertical.dart';
+import 'package:mobile_supportyou/views/widgets/ebook_card.dart';
 
 class SemuaEbookScreen extends StatefulWidget {
   const SemuaEbookScreen({super.key});
@@ -35,7 +35,7 @@ class _SemuaEbookScreenState extends State<SemuaEbookScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    super.dispose();
+    super.dispose(); 
   }
 
   Future<void> onRefresh() async {
@@ -112,7 +112,8 @@ class _SemuaEbookScreenState extends State<SemuaEbookScreen> {
                     child: IconButton(
                       icon: Icon(Icons.search, color: theme, size: 24),
                       onPressed: () {
-                        // TODO: navigasi ke halaman pencarian ebook
+                        // 🔹 panggil fungsi search di controller
+                        controller.searchEbookAll(search.text);
                       },
                     ),
                   ),
@@ -125,7 +126,7 @@ class _SemuaEbookScreenState extends State<SemuaEbookScreen> {
       body: Obx(() {
         return RefreshIndicator(
           onRefresh: onRefresh,
-          child: controller.isLoadingAll.value && controller.ebookList.isEmpty
+          child: controller.isLoadingAll.value && controller.ebookListAll.isEmpty
               ? const Center(child: CircularProgressIndicator())
               : GridView.builder(
                   controller: _scrollController,
@@ -138,11 +139,11 @@ class _SemuaEbookScreenState extends State<SemuaEbookScreen> {
                     childAspectRatio: 0.68,
                   ),
                   // 👇 tambahkan slot ekstra untuk indikator loading bawah
-                  itemCount: controller.ebookList.length +
+                  itemCount: controller.ebookListAll.length +
                       (controller.isMoreLoadingAll.value ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (index < controller.ebookList.length) {
-                      final ebook = controller.ebookList[index];
+                    if (index < controller.ebookListAll.length) {
+                      final ebook = controller.ebookListAll[index];
                       return EbookCardVertical(
                         ebook: ebook,
                         onPress: () {
