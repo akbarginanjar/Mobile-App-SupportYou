@@ -14,6 +14,7 @@ class Ebook {
   final String? isbn;
   final bool isFree;
   final bool isPublished;
+  final String? type; 
 
   Ebook({
     required this.id,
@@ -29,6 +30,7 @@ class Ebook {
     this.isbn,
     required this.isFree,
     required this.isPublished,
+    this.type,
   });
 
   factory Ebook.fromJson(Map<String, dynamic> json) {
@@ -54,6 +56,7 @@ class Ebook {
       isbn: json['isbn'],
       isFree: json['is_free'] ?? false,
       isPublished: json['is_published'] ?? false,
+      type: json['type'],
     );
   }
 }

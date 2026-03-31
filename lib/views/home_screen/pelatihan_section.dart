@@ -18,7 +18,6 @@ class PelatihanSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
           child: Row(
@@ -41,8 +40,6 @@ class PelatihanSection extends StatelessWidget {
             ],
           ),
         ),
-
-        // Body list pelatihan
         Obx(() {
           if (controller.isLoading.value && controller.pelatihanList.isEmpty) {
             return const Center(child: CircularProgressIndicator());

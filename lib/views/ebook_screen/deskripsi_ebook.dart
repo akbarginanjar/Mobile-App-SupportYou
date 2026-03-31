@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_supportyou/models/ebook_model.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:mobile_supportyou/config/theme.dart';
 
 class EbookDeskripsi extends StatelessWidget {
   final Ebook ebook;
@@ -13,7 +11,7 @@ class EbookDeskripsi extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Text(
         ebook.deskripsi ?? 'Tidak ada deskripsi',
-        style: GoogleFonts.montserrat(color: textTheme, fontSize: 14),
+        style: Theme.of(context).textTheme.bodySmall
       ),
     );
   }
