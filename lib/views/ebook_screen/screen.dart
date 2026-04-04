@@ -148,12 +148,18 @@ class _EbookScreenState extends State<EbookScreen> {
                 onPressed: () {
                   // TODO: aksi tambah ke keranjang
                 },
-                child: Text(
-                  'Tambah ke Keranjang',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: Theme.of(context).colorScheme.secondary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_shopping_cart, color: Theme.of(context).colorScheme.secondary,),
+                    Text(
+                      'Keranjang',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: Theme.of(context).colorScheme.secondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
                 ),
               ),
             ),

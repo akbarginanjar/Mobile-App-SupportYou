@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_supportyou/config/theme.dart';
+import 'package:mobile_supportyou/views/widgets/search_field.dart';
 import 'package:mobile_supportyou/controllers/ebook_controller.dart';
 import 'package:mobile_supportyou/views/widgets/ebook_card.dart';
 
@@ -81,44 +82,14 @@ class _SemuaEbookScreenState extends State<SemuaEbookScreen> {
                 color: theme,
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: search,
-                      decoration: InputDecoration(
-                        hintText: 'Cari e-book...',
-                        hintStyle: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                          color: textTheme,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 10,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: primary,
-                      borderRadius: const BorderRadius.only(
-                        topRight: Radius.circular(15),
-                        bottomRight: Radius.circular(15),
-                      ),
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.search, color: theme, size: 24),
-                      onPressed: () {
-                        // 🔹 panggil fungsi search di controller
-                        controller.searchEbookAll(search.text);
-                      },
-                    ),
-                  ),
-                ],
-              ),
+              child: SearchField(
+      controller: search,
+      hintText: 'Cari e-book...',
+      onSearch: () {
+        controller.searchEbookAll(search.text);
+      },
+    ),
+
             ),
           ),
         ),
@@ -136,7 +107,7 @@ class _SemuaEbookScreenState extends State<SemuaEbookScreen> {
                     crossAxisCount: 2,
                     mainAxisSpacing: 1,
                     crossAxisSpacing: 1,
-                    childAspectRatio: 0.68,
+                    childAspectRatio: 0.66,
                   ),
                   // 👇 tambahkan slot ekstra untuk indikator loading bawah
                   itemCount: controller.ebookListAll.length +

@@ -62,6 +62,8 @@ class EbookCardVertical extends StatelessWidget {
               child: Text(
                 ebook.nama,
                 style: Theme.of(context).textTheme.bodyLarge,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             const Spacer(),
