@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-// import 'package:skeletonizer/skeletonizer.dart';
 import 'package:mobile_supportyou/config/theme.dart';
+import 'package:mobile_supportyou/views/widgets/search_field.dart';
 import 'package:mobile_supportyou/controllers/home_controller.dart';
 import 'package:mobile_supportyou/views/home_screen/carousel.dart';
 import 'package:mobile_supportyou/views/home_screen/ebook_section.dart';
@@ -67,57 +67,14 @@ class HomeScreen extends StatelessWidget {
                       color: theme,
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: search,
-                            decoration: InputDecoration(
-                              hintText: 'Cari produk...',
-                              hintStyle: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15,
-                                color: textTheme,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 10,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(15),
-                                  bottomLeft: Radius.circular(15),
-                                ),
-                                borderSide: BorderSide(color: textTheme),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(15),
-                                  bottomLeft: Radius.circular(15),
-                                ),
-                                borderSide: BorderSide(color: textTheme),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: primary,
-                            borderRadius: const BorderRadius.only(
-                              topRight: Radius.circular(15),
-                              bottomRight: Radius.circular(15),
-                            ),
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.search, color: theme, size: 24),
-                            onPressed: () {
-                              // Get.to(SearchProduk(search: search.text));
-                            },
-                          ),
-                        ),
-                      ],
+                    child: SearchField(
+                      controller: search,
+                      hintText: 'Cari produk...',
+                      onSearch: () {
+                        // Get.to(SearchProduk(search: search.text));
+                      },
                     ),
+
                   ),
                 ),
               ),

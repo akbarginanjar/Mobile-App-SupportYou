@@ -5,7 +5,7 @@ import 'package:mobile_supportyou/controllers/ebook_controller.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
 
 class EbookScreen extends StatefulWidget {
-  final String slug; // sebenarnya id
+  final String slug;
   const EbookScreen({super.key, required this.slug});
 
   @override

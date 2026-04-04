@@ -7,6 +7,7 @@ import 'package:mobile_supportyou/views/widgets/button.dart';
 import 'package:mobile_supportyou/utils/alert.dart';
 import 'package:mobile_supportyou/services/auth_service.dart';
 import 'package:mobile_supportyou/views/login_nohp_screen/screen.dart';
+import 'package:mobile_supportyou/views/register_screen/screen.dart';
 import 'package:mobile_supportyou/views/main_screen/screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -136,10 +137,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text('Anda belum punya akun?'),
                     TextButton(
                       onPressed: () {
-                        // Get.to(
-                        //   const RegisterScreen(),
-                        //   transition: Transition.rightToLeftWithFade,
-                        // );
+                        Get.to(
+                          const RegisterScreen(),
+                        );
                       },
                       child: const Text('Register'),
                     ),

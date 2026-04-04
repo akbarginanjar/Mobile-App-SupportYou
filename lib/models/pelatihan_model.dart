@@ -44,6 +44,15 @@ class Pelatihan {
   final DateTime? updatedAt;
   final Asosiasi? asosiasi;
 
+  // 🔹 Tambahan field
+  final String? linkGmaps;
+  final String? tempat;
+  final String? waktu;
+  final String? meetingLink;
+  final DateTime? startTime;
+  final DateTime? endTime;
+  final int? maxPeserta;
+
   Pelatihan({
     required this.id,
     this.asosiasiId,
@@ -67,6 +76,13 @@ class Pelatihan {
     this.createdAt,
     this.updatedAt,
     this.asosiasi,
+    this.linkGmaps,
+    this.tempat,
+    this.waktu,
+    this.meetingLink,
+    this.startTime,
+    this.endTime,
+    this.maxPeserta,
   });
 
   factory Pelatihan.fromJson(Map<String, dynamic> json) {
@@ -107,6 +123,19 @@ class Pelatihan {
       asosiasi: json['asosiasi'] != null
           ? Asosiasi.fromJson(json['asosiasi'])
           : null,
+
+      // 🔹 Field tambahan
+      linkGmaps: json['link_gmaps'],
+      tempat: json['tempat'],
+      waktu: json['waktu'],
+      meetingLink: json['meeting_link'],
+      startTime: json['start_time'] != null
+          ? DateTime.tryParse(json['start_time'])
+          : null,
+      endTime: json['end_time'] != null
+          ? DateTime.tryParse(json['end_time'])
+          : null,
+      maxPeserta: json['max_peserta'],
     );
   }
 }

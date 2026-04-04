@@ -1,142 +1,129 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:async';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:mobile_supportyou/utils/base.dart';
+import 'package:mobile_supportyou/config/theme.dart'; // Import warna primary jika ada
 
 class AuthService extends GetConnect {
   final box = GetStorage();
-  
-    /// Request OTP dengan nomor HP
-  Future<Response> loginNoHp(Map<String, dynamic> body) async {
-    final header = {
-      'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
-      'device': 'mobile',
-    };
 
+  // Header default
+  Map<String, String> get _headers => {
+        'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
+        'device': 'mobile',
+      };
+
+  /// 1. Request OTP
+  Future<Response> loginNoHp(Map<String, dynamic> body) async {
     try {
       EasyLoading.show(status: 'Mengirim OTP...');
-      final response = await post(
-        '${Base.url}/v1/otp/request',
-        body,
-        headers: header,
-      );
+      final response = await post('${Base.url}/v1/otp/request', body, headers: _headers);
       EasyLoading.dismiss();
-
-      print("Status Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
-
       return response;
-    } on TimeoutException {
-      EasyLoading.dismiss();
-      Get.snackbar('Masalah Koneksi', 'Jaringan lemah, silahkan perbaiki jaringan anda!');
-    } on SocketException {
-      EasyLoading.dismiss();
-      Get.snackbar('Masalah Koneksi', 'Data dalam keadaan mati, silahkan nyalakan data anda!');
-    } on HttpException catch (e) {
-      EasyLoading.dismiss();
-      Get.snackbar('Masalah Koneksi', e.message);
-    } catch (e, stackTrace) {
-      EasyLoading.dismiss();
-      Get.snackbar(e.toString(), stackTrace.toString());
+    } catch (e) {
+      _handleError(e);
+      return const Response(statusCode: 500, body: {"message": "Request OTP gagal"});
     }
-
-    return Response(statusCode: 400, body: {"message": "Request OTP gagal"});
   }
 
-  /// Verifikasi OTP
+  /// 2. Verifikasi OTP
   Future<Response> otpVerifikasi(Map<String, dynamic> body) async {
-    final header = {
-      'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
-      'device': 'mobile',
-    };
-
     try {
       EasyLoading.show(status: 'Verifikasi OTP...');
-      final response = await post(
-        '${Base.url}/v1/otp/verify',
+      final response = await post('${Base.url}/v1/otp/verify', body, headers: _headers);
+      EasyLoading.dismiss();
+
+      if (response.statusCode == 200) {
+        _saveSession(response.body);
+      }
+      return response;
+    } catch (e) {
+      _handleError(e);
+      return const Response(statusCode: 500, body: {"message": "Verifikasi OTP gagal"});
+    }
+  }
+
+  /// 3. Login Tradisional
+  Future<Response> login({required String email, required String password}) async {
+    try {
+      var body = {"email": email, "password": password};
+      EasyLoading.show(status: 'Loading...');
+      final Response conn = await post('${Base.url}/v1/auth/user-login', body, headers: _headers);
+      EasyLoading.dismiss();
+
+      if (conn.statusCode == 200) {
+        EasyLoading.showSuccess('Login Berhasil!');
+        _saveSession(conn.body);
+      } else {
+        Get.snackbar("Login Gagal", conn.body['message'] ?? "Cek kembali akun anda");
+      }
+      return conn;
+    } catch (e) {
+      _handleError(e);
+      return const Response(statusCode: 500, body: {"message": "Login gagal"});
+    }
+  }
+
+  /// 4. Register Affiliator (SESUAI PAYLOAD TERBARU)
+  /// Menggunakan Map body agar lebih fleksibel mengikuti payload yang kamu minta
+  Future<Response> register(Map<String, dynamic> body) async {
+    try {
+      EasyLoading.show(status: 'Mendaftarkan...');
+      final Response conn = await post(
+        '${Base.url}/v1/affiliator/register',
         body,
-        headers: header,
+        headers: _headers,
       );
       EasyLoading.dismiss();
 
-      print("Status Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
+      debugPrint("Register Status: ${conn.statusCode}");
+      debugPrint("Register Body: ${conn.body}");
 
-      if (response.statusCode == 200) {
-        // Simpan token dan data user
-        box.write('tokens', response.body['tokens']);
-        box.write('id', response.body['data']['id']);
-        box.write('no_hp', response.body['data']['no_hp']);
-        box.write('email', response.body['data']['email']);
-        box.write('nama_lengkap', response.body['data']['nama_lengkap']);
+      if (conn.statusCode == 200 || conn.statusCode == 201) {
+        EasyLoading.showSuccess('Pendaftaran Berhasil!');
+      } else {
+        // Ambil pesan error dari backend
+        String msg = "Terjadi kesalahan";
+        if (conn.body is Map) {
+          msg = conn.body['message'] ?? "Data tidak valid";
+        }
+
+        Get.defaultDialog(
+          title: "Daftar Gagal",
+          middleText: msg,
+          textConfirm: "OKE",
+          buttonColor: primary, // Gunakan warna dari theme.dart kamu
+          confirmTextColor: Colors.white,
+          onConfirm: () => Get.back(),
+        );
       }
-
-      return response;
-    } on TimeoutException {
-      EasyLoading.dismiss();
-      Get.snackbar('Masalah Koneksi', 'Jaringan lemah, silahkan perbaiki jaringan anda!');
-    } on SocketException {
-      EasyLoading.dismiss();
-      Get.snackbar('Masalah Koneksi', 'Data dalam keadaan mati, silahkan nyalakan data anda!');
-    } on HttpException catch (e) {
-      EasyLoading.dismiss();
-      Get.snackbar('Masalah Koneksi', e.message);
-    } catch (e, stackTrace) {
-      EasyLoading.dismiss();
-      Get.snackbar(e.toString(), stackTrace.toString());
+      return conn;
+    } catch (e) {
+      _handleError(e);
+      return const Response(statusCode: 500, body: {"message": "Register gagal"});
     }
-
-    return Response(statusCode: 400, body: {"message": "Verifikasi OTP gagal"});
   }
 
-  Future<Response> login({required String email, required String password}) async {
-    try {
-      if (email.isNotEmpty && password.isNotEmpty) {
-        var body = {
-          "email": email,
-          "password": password,
-        };
+  /// Helper simpan session agar kode tidak duplikat
+  void _saveSession(dynamic responseBody) {
+    box.write('tokens', responseBody['tokens']);
+    box.write('id', responseBody['data']['id']);
+    box.write('no_hp', responseBody['data']['no_hp']);
+    box.write('email', responseBody['data']['email']);
+    box.write('nama_lengkap', responseBody['data']['nama_lengkap']);
+  }
 
-        EasyLoading.show(status: 'Loading...');
-
-        final Response conn = await post(
-          '${Base.url}/v1/auth/user-login',
-          body,
-          headers: {
-            'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
-            'device': 'mobile',
-          },
-        );
-
-        print("Status Code: ${conn.statusCode}");
-        print("Response Body: ${conn.body}");
-
-        if (conn.statusCode == 200) {
-          EasyLoading.showSuccess('Login Berhasil!');
-          box.write('tokens', conn.body['tokens']);
-          box.write('id', conn.body['data']['id']);
-          box.write('email', conn.body['data']['email']);
-          box.write('no_hp', conn.body['data']['no_hp']);
-          box.write('nama_lengkap', conn.body['data']['nama_lengkap']);
-        } else if (conn.statusCode == 400) {
-          EasyLoading.showError('Bad Request: ${conn.body}');
-        } else {
-          EasyLoading.dismiss();
-          Get.snackbar("Login Gagal", "${conn.body}");
-        }
-      }
-    } on TimeoutException {
-      Get.snackbar('Masalah Koneksi', 'Jaringan lemah, silahkan perbaiki jaringan anda!');
-    } on SocketException {
-      Get.snackbar('Masalah Koneksi', 'Data dalam keadaan mati, silahkan nyalakan data anda!');
-    } on HttpException catch (e) {
-      Get.snackbar('Masalah Koneksi', e.message);
-    } on Error catch (e) {
-      Get.snackbar(e.toString(), e.stackTrace.toString());
+  void _handleError(dynamic e) {
+    EasyLoading.dismiss();
+    if (e is TimeoutException) {
+      Get.snackbar('Koneksi', 'Waktu habis, coba lagi.');
+    } else if (e is SocketException) {
+      Get.snackbar('Koneksi', 'Tidak ada internet.');
+    } else {
+      Get.snackbar('Error', 'Terjadi kesalahan sistem.');
     }
-
-    return Response(statusCode: 400, body: {"message": "Login gagal"});
   }
 }

@@ -1,69 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/controllers/pelatihan_controller.dart';
-import 'package:mobile_supportyou/views/widgets/pelatihan_card_vertical.dart';
+import 'package:mobile_supportyou/views/widgets/produk_skeleton.dart';
+import 'package:mobile_supportyou/views/widgets/pelatihan_card.dart';
+import 'package:mobile_supportyou/views/semua_pelatihan_screen/screen.dart';
 
 class PelatihanSection extends StatelessWidget {
-  final String title;
-
-  const PelatihanSection({
-    super.key,
-    this.title = "Pelatihan",
-  });
+  const PelatihanSection({super.key});
 
   @override
   Widget build(BuildContext context) {
     final PelatihanController controller = Get.put(PelatihanController());
 
+    // 🔹 Pastikan memanggil loadPelatihanHome() untuk home
+    controller.loadPelatihanHome();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium),
+                'Pelatihan',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               TextButton(
-                onPressed: (){},
+                onPressed: () {
+                  Get.to(() => const SemuaPelatihanScreen());
+                },
                 child: Row(
-                  children: [
-                    const Text('Lihat semua'),
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                    ),
+                  children: const [
+                    Text('Lihat semua'),
+                    Icon(Icons.arrow_forward_ios_rounded),
                   ],
                 ),
               ),
             ],
           ),
         ),
+
+        // Body list pelatihan
         Obx(() {
-          if (controller.isLoading.value && controller.pelatihanList.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+          if (controller.isLoadingHome.value && controller.pelatihanListHome.isEmpty) {
+            return Container(
+              width: 230, 
+              margin: const EdgeInsets.only(left: 8),
+              child: ProdukSkeleton());
           }
 
-          if (controller.pelatihanList.isEmpty) {
+          if (controller.pelatihanListHome.isEmpty) {
             return const Center(child: Text('Belum ada pelatihan'));
           }
 
           return SizedBox(
-            height: 291,
+            height: 310,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: controller.pelatihanList.length,
+              itemCount: controller.pelatihanListHome.length,
               itemBuilder: (context, index) {
-                final pelatihan = controller.pelatihanList[index];
+                final pelatihan = controller.pelatihanListHome[index];
                 return Container(
-                  width: 190,
-                  margin: EdgeInsets.only(left: index == 0 ? 8 : 8),
-                  child: PelatihanCardVertical(
+                  width: 230,
+                  margin: const EdgeInsets.only(left: 8),
+                  child: PelatihanCard(
                     pelatihan: pelatihan,
-                    onPress: () {
-                      // TODO: navigasi ke detail pelatihan
-                    },
                   ),
                 );
               },

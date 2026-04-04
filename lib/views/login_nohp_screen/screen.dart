@@ -6,7 +6,7 @@ import 'package:mobile_supportyou/views/widgets/button.dart';
 import 'package:mobile_supportyou/utils/alert.dart';
 import 'package:mobile_supportyou/controllers/auth_controller.dart';
 import 'package:mobile_supportyou/views/login_screen/screen.dart';
-// import 'package:mobile_supportyou/views/register_screen.dart';
+import 'package:mobile_supportyou/views/register_screen/screen.dart';
 
 class LoginNoHpScreen extends StatelessWidget {
   const LoginNoHpScreen({super.key});
@@ -86,10 +86,9 @@ class LoginNoHpScreen extends StatelessWidget {
                     const Text('Anda belum punya akun?'),
                     TextButton(
                       onPressed: () {
-                        // Get.to(
-                        //   const RegisterScreen(),
-                        //   transition: Transition.rightToLeftWithFade,
-                        // );
+                        Get.to(
+                          const RegisterScreen(),
+                        );
                       },
                       child: const Text('Register'),
                     ),

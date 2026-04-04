@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/controllers/ebook_controller.dart';
+import 'package:mobile_supportyou/views/widgets/produk_skeleton.dart';
 import 'package:mobile_supportyou/views/semua_ebook_screen/screen.dart';
 import 'package:mobile_supportyou/views/widgets/ebook_card.dart';
 
@@ -45,7 +46,10 @@ class EbookSection extends StatelessWidget {
         // Body list ebook
         Obx(() {
           if (controller.isLoadingHome.value && controller.ebookListHome.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return Container(
+              width: 190,
+              margin: const EdgeInsets.only(left: 8),
+              child: ProdukSkeleton());
           }
 
           if (controller.ebookListHome.isEmpty) {

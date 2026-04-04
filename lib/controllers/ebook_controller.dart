@@ -15,7 +15,7 @@ class EbookController extends GetxController {
   var ebookListAll = <Ebook>[].obs;
   var isLoadingAll = false.obs;
   var isMoreLoadingAll = false.obs;
-  int lengthAll = 10;
+  int lengthAll = 5;
   int startAll = 0;
   bool hasMoreAll = true;
 
