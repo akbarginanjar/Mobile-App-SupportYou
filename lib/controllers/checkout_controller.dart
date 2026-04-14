@@ -4,6 +4,9 @@ import 'package:get/get.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/models/payment_model.dart';
 import 'package:mobile_supportyou/services/payment_service.dart';
+import 'package:mobile_supportyou/utils/value_formatter.dart';
+import 'package:mobile_supportyou/views/checkout_screen/metode_pembayaran.dart';
+import 'package:mobile_supportyou/views/checkout_screen/voucher.dart';
 
 class CheckoutController extends GetxController {
   final Pelatihan pelatihan;
@@ -15,15 +18,17 @@ class CheckoutController extends GetxController {
   final isProcessing = false.obs;
   
   // Payment Methods
-  final paymentMethods = <PaymentGroup>[].obs;
+  final paymentGroups = <PaymentGroup>[].obs;
   final selectedPaymentMethod = Rx<PaymentMethod?>(null);
   
   // Transaction Fees
   final serviceFee = 0.obs;
   final appFee = 0.obs;
   
-  // Discount
-  final discount = 0.obs;
+  // Discounts
+  final availableDiscounts = <Discount>[].obs;
+  final selectedDiscount = Rx<Discount?>(null);
+  final discountAmount = 0.obs;
   
   // Total Price
   final totalPrice = 0.obs;
@@ -31,27 +36,19 @@ class CheckoutController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('═══════════════════════════════════════════════════════════');
-    print('🚀 CheckoutController initialized');
-    print('Pelatihan ID: ${pelatihan.id}');
-    print('Pelatihan Nama: ${pelatihan.nama}');
-    print('Harga: ${pelatihan.harga}');
-    print('═══════════════════════════════════════════════════════════');
     loadCheckoutData();
   }
   
   Future<void> loadCheckoutData() async {
-    print('🔄 Loading checkout data...');
     isLoading.value = true;
     try {
       await Future.wait([
         loadPaymentMethods(),
         loadTransactionFees(),
+        loadAvailableDiscounts(),
       ]);
       calculateTotalPrice();
-      print('✅ Checkout data loaded successfully');
     } catch (e) {
-      print('❌ Error loading checkout data: $e');
       Get.snackbar(
         'Error',
         'Gagal memuat data checkout: ${e.toString().replaceFirst('Exception: ', '')}',
@@ -62,19 +59,14 @@ class CheckoutController extends GetxController {
       );
     } finally {
       isLoading.value = false;
-      print('🔄 Loading state set to false');
     }
   }
   
   Future<void> loadPaymentMethods() async {
-    print('🔄 Loading payment methods from API...');
     try {
       final response = await _paymentService.getPaymentMethods();
-      print('Raw response: $response');
       
       if (response != null && response['status'] == true) {
-        print('✅ Payment methods API response status: true');
-        
         final List<PaymentGroup> groups = [];
         
         for (var groupData in response['data']) {
@@ -107,56 +99,98 @@ class CheckoutController extends GetxController {
           groups.add(PaymentGroup(group: groupName, items: items));
         }
         
-        paymentMethods.value = groups;
-        print('✅ Total payment groups loaded: ${groups.length}');
+        paymentGroups.value = groups;
       } else {
-        print('❌ Invalid response format or status false');
         throw Exception('Invalid response from server');
       }
     } catch (e) {
-      print('❌ Error loading payment methods: $e');
       rethrow;
     }
   }
   
   Future<void> loadTransactionFees() async {
-    print('🔄 Loading transaction fees from API...');
     try {
       final response = await _paymentService.getTransactionFees();
-      print('Raw response: $response');
       
       if (response is List) {
         for (var fee in response) {
           if (fee['code'] == 'biaya-layanan') {
             serviceFee.value = fee['nominal'];
-            print('✅ Service fee set to: ${serviceFee.value}');
           } else if (fee['code'] == 'biaya-aplikasi') {
             appFee.value = fee['nominal'];
-            print('✅ App fee set to: ${appFee.value}');
           }
         }
-      } else {
-        print('⚠️ Transaction fees response is not a List, using default values');
       }
     } catch (e) {
-      print('❌ Error loading transaction fees: $e');
+      // Use default values (0)
     }
+  }
+  
+  Future<void> loadAvailableDiscounts() async {
+    try {
+      final response = await _paymentService.getAvailableDiscounts();
+      
+      if (response is List) {
+        availableDiscounts.value = response.map((json) => Discount.fromJson(json)).toList();
+      }
+    } catch (e) {
+      // No discounts available
+    }
+  }
+  
+  Future<void> selectPaymentMethod() async {
+    if (paymentGroups.isEmpty) return;
+    
+    final result = await Get.to(() => MetodePembayaranScreen(
+          paymentGroups: paymentGroups,
+          selectedMethod: selectedPaymentMethod.value,
+        ));
+    
+    if (result != null && result is PaymentMethod) {
+      selectedPaymentMethod.value = result;
+    }
+  }
+  
+  Future<void> selectDiscount() async {
+    if (availableDiscounts.isEmpty) return;
+    
+    final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
+    final result = await Get.to(() => VoucherScreen(
+          discounts: availableDiscounts,
+          selectedDiscount: selectedDiscount.value,
+          originalPrice: basePrice,
+        ));
+    
+    if (result != null && result is Discount) {
+      selectedDiscount.value = result;
+      discountAmount.value = result.calculateDiscount(basePrice);
+    } else if (result == null) {
+      selectedDiscount.value = null;
+      discountAmount.value = 0;
+    }
+    calculateTotalPrice();
   }
   
   void calculateTotalPrice() {
     final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
-    final total = basePrice + serviceFee.value + appFee.value - discount.value;
+    final total = basePrice + serviceFee.value + appFee.value - discountAmount.value;
     totalPrice.value = total;
-    
-    print('═══════════════════════════════════════════════════════════');
-    print('💰 PRICE CALCULATION');
-    print('Base Price: ${pelatihan.harga}');
-    print('Final Price: ${pelatihan.hargaFinal ?? pelatihan.harga}');
-    print('Service Fee: ${serviceFee.value}');
-    print('App Fee: ${appFee.value}');
-    print('Discount: ${discount.value}');
-    print('Total Price: ${totalPrice.value}');
-    print('═══════════════════════════════════════════════════════════');
+  }
+  
+  String getSelectedPaymentMethodName() {
+    return selectedPaymentMethod.value?.name ?? 'Pilih Metode Pembayaran';
+  }
+  
+  String getSelectedDiscountText() {
+    if (selectedDiscount.value == null) {
+      return 'Pilih Voucher';
+    }
+    final discount = selectedDiscount.value!;
+    if (discount.type == 'percentage') {
+      return '${discount.name} (${discount.value}% OFF)';
+    } else {
+      return '${discount.name} (${discount.getFormattedValue()} OFF)';
+    }
   }
   
   Future<void> processCheckout() async {
@@ -182,7 +216,9 @@ class CheckoutController extends GetxController {
         'total_price': totalPrice.value,
         'service_fee': serviceFee.value,
         'app_fee': appFee.value,
-        'discount': discount.value,
+        'discount_id': selectedDiscount.value?.id,
+        'discount_name': selectedDiscount.value?.name,
+        'discount_amount': discountAmount.value,
         'original_price': pelatihan.harga,
         'final_price': pelatihan.hargaFinal ?? pelatihan.harga,
       };

@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/checkout_controller.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
-import 'package:mobile_supportyou/models/payment_model.dart';
 import 'package:mobile_supportyou/utils/image_helper.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
 
@@ -40,7 +39,6 @@ class CheckoutScreen extends StatelessWidget {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          print('⏳ Loading state: true');
           return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -58,38 +56,27 @@ class CheckoutScreen extends StatelessWidget {
           );
         }
         
-        print('✅ Data loaded, building UI');
-        print('Payment methods count: ${controller.paymentMethods.length}');
-        
         return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Product Info Card
               _buildProductCard(context, controller),
-              
-              // Payment Method Section
-              _buildPaymentSection(context, controller),
-              
-              // Voucher Section (Coming Soon)
-              _buildVoucherSection(context),
-              
-              // Order Summary
+              _buildPaymentMethodButton(context, controller),
+              _buildDiscountButton(context, controller),
               _buildOrderSummary(context, controller),
-              
               const SizedBox(height: 100),
             ],
           ),
         );
       }),
       
-      // Bottom Button
       bottomNavigationBar: _buildBottomButton(context, controller),
     );
   }
   
   Widget _buildProductCard(BuildContext context, CheckoutController controller) {
     final String imageUrl = ImageHelper.getFullImageUrl(controller.pelatihan.cover);
+    final pelatihan = controller.pelatihan;
     
     return Container(
       margin: const EdgeInsets.all(16),
@@ -105,71 +92,264 @@ class CheckoutScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product Image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              width: 80,
-              height: 80,
-              child: imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        print('Error loading image: $error');
-                        return Image.asset(
-                          'assets/image/pelatihan_placeholder.jpg',
-                          width: 80,
-                          height: 80,
+          // Header dengan gambar dan info utama
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          width: 100,
+                          height: 100,
                           fit: BoxFit.cover,
-                        );
-                      },
-                    )
-                  : Image.asset(
-                      'assets/image/pelatihan_placeholder.jpg',
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Image.asset(
+                              'assets/image/pelatihan_placeholder.jpg',
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            );
+                          },
+                        )
+                      : Image.asset(
+                          'assets/image/pelatihan_placeholder.jpg',
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Product Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Type Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: pelatihan.typePelatihan == "offline" 
+                              ? [Colors.orange, Colors.deepOrange] 
+                              : [Colors.blue, Colors.lightBlue],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            pelatihan.typePelatihan == "offline" 
+                                ? Icons.location_on 
+                                : Icons.video_library,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            pelatihan.typePelatihan == "offline" ? "OFFLINE" : "ONLINE",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-            ),
+                    const SizedBox(height: 8),
+                    // Nama Pelatihan
+                    Text(
+                      pelatihan.nama,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    // Harga
+                    Text(
+                      Formatter.formatCurrency(pelatihan.hargaFinal ?? pelatihan.harga),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          // Product Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  controller.pelatihan.nama,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+          
+          const Divider(height: 24),
+          
+          // Detail Informasi Pelatihan
+          Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                  context,
+                  icon: Icons.calendar_today,
+                  label: "Waktu",
+                  value: pelatihan.waktu != null 
+                      ? _formatDate(pelatihan.waktu!) 
+                      : "TBA",
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  Formatter.formatCurrency(controller.pelatihan.hargaFinal ?? controller.pelatihan.harga),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDetailItem(
+                  context,
+                  icon: Icons.people_outline,
+                  label: "Kuota",
+                  value: pelatihan.maxPeserta != null 
+                      ? "${pelatihan.maxPeserta} Peserta" 
+                      : "Tidak terbatas",
                 ),
-              ],
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Tempat / Platform
+          if (pelatihan.typePelatihan == "offline") ...[
+            _buildDetailItem(
+              context,
+              icon: Icons.location_on,
+              label: "Lokasi",
+              value: pelatihan.tempat ?? "Lokasi belum ditentukan",
+              fullWidth: true,
             ),
+          ] else ...[
+            _buildDetailItem(
+              context,
+              icon: Icons.wifi,
+              label: "Platform",
+              value: "Zoom Meeting / Google Meet",
+              fullWidth: true,
+            ),
+          ],
+          
+          const SizedBox(height: 12),
+          
+          // Penyelenggara
+          _buildDetailItem(
+            context,
+            icon: Icons.business_outlined,
+            label: "Penyelenggara",
+            value: pelatihan.mitra?.nama ?? "Belum ada nama",
+            fullWidth: true,
           ),
         ],
       ),
     );
   }
   
-  Widget _buildPaymentSection(BuildContext context, CheckoutController controller) {
+  Widget _buildDetailItem(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    bool fullWidth = false,
+  }) {
+    if (fullWidth) {
+      return Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 16, color: primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+    
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: primary),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+  
+  String _formatDate(String dateTimeString) {
+    try {
+      final DateTime dateTime = DateTime.parse(dateTimeString);
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    } catch (e) {
+      return dateTimeString;
+    }
+  }
+  
+  Widget _buildPaymentMethodButton(BuildContext context, CheckoutController controller) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -189,98 +369,48 @@ class CheckoutScreen extends StatelessWidget {
         children: [
           const Text(
             'Metode Pembayaran',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 12),
-          // Payment Method Dropdown
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<PaymentMethod>(
-                isExpanded: true,
-                hint: Text(
-                  'Pilih Metode Pembayaran',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[500],
-                  ),
-                ),
-                value: controller.selectedPaymentMethod.value,
-                items: controller.paymentMethods.expand((group) {
-                  return group.items.map((method) {
-                    return DropdownMenuItem(
-                      value: method,
-                      child: Row(
-                        children: [
-                          if (method.imageUrl != null)
-                            Image.network(
-                              method.imageUrl!,
-                              width: 24,
-                              height: 24,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Icon(
-                                  Icons.payment,
-                                  size: 24,
-                                  color: Colors.grey[600],
-                                );
-                              },
-                            ),
-                          if (method.imageUrl != null) const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              method.name,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList();
-                }).toList(),
-                onChanged: (value) {
-                  print('Payment method selected: ${value?.name}');
-                  controller.selectedPaymentMethod.value = value;
-                },
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: () => controller.selectPaymentMethod(),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.grey[50],
               ),
-            ),
-          ),
-          // Show error if no payment methods
-          if (controller.paymentMethods.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.red[700], size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Tidak ada metode pembayaran yang tersedia',
-                        style: TextStyle(color: Colors.red[700], fontSize: 12),
-                      ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Obx(() => Text(
+                    controller.getSelectedPaymentMethodName(),
+                    style: TextStyle(
+                      color: controller.selectedPaymentMethod.value == null 
+                          ? Colors.grey[500] 
+                          : Colors.black87,
+                      fontWeight: controller.selectedPaymentMethod.value == null 
+                          ? FontWeight.normal 
+                          : FontWeight.w500,
                     ),
-                  ],
-                ),
+                  )),
+                  Icon(Icons.chevron_right, color: Colors.grey[400]),
+                ],
               ),
             ),
+          ),
         ],
       ),
     );
   }
   
-  Widget _buildVoucherSection(BuildContext context) {
+  Widget _buildDiscountButton(BuildContext context, CheckoutController controller) {
+    if (controller.availableDiscounts.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -295,20 +425,70 @@ class CheckoutScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Pilih Voucher',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+          const Text(
+            'Voucher Diskon',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: () => controller.selectDiscount(),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.grey[50],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Obx(() => Expanded(
+                    child: Text(
+                      controller.getSelectedDiscountText(),
+                      style: TextStyle(
+                        color: controller.selectedDiscount.value == null 
+                            ? Colors.grey[500] 
+                            : Colors.green[700],
+                        fontWeight: controller.selectedDiscount.value == null 
+                            ? FontWeight.normal 
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  )),
+                  Icon(Icons.chevron_right, color: Colors.grey[400]),
+                ],
+              ),
             ),
           ),
-          Chip(
-            label: Text('Coming Soon'),
-            backgroundColor: Colors.grey,
-          ),
+          if (controller.selectedDiscount.value != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.local_offer, size: 16, color: Colors.green[700]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Diskon ${controller.selectedDiscount.value?.getFormattedValue()} telah diterapkan',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.green[700],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -334,48 +514,46 @@ class CheckoutScreen extends StatelessWidget {
         children: [
           const Text(
             'Ringkasan Belanja',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
-          // Total Harga
+          
           _buildSummaryRow(
             context,
             'Total Harga (1 Pelatihan)',
             Formatter.formatCurrency(controller.pelatihan.hargaFinal ?? controller.pelatihan.harga),
           ),
           const SizedBox(height: 12),
-          // Biaya Layanan
-          Obx(() => _buildSummaryRow(
+          
+          _buildSummaryRow(
             context,
             'Biaya Layanan',
             Formatter.formatCurrency(controller.serviceFee.value),
-          )),
+          ),
           const SizedBox(height: 12),
-          // Biaya Aplikasi
-          Obx(() => _buildSummaryRow(
+          
+          _buildSummaryRow(
             context,
             'Biaya Aplikasi',
             Formatter.formatCurrency(controller.appFee.value),
-          )),
-          // Diskon (if applied)
-          Obx(() => controller.discount.value > 0
+          ),
+          
+          Obx(() => controller.discountAmount.value > 0
               ? Column(
                   children: [
                     const SizedBox(height: 12),
                     _buildSummaryRow(
                       context,
-                      'Diskon',
-                      '- ${Formatter.formatCurrency(controller.discount.value)}',
+                      'Diskon (${controller.selectedDiscount.value?.name ?? ''})',
+                      '- ${Formatter.formatCurrency(controller.discountAmount.value)}',
                       isDiscount: true,
                     ),
                   ],
                 )
               : const SizedBox.shrink()),
+          
           const Divider(height: 24),
-          // Total Bayar
+          
           Obx(() => _buildSummaryRow(
             context,
             'Total Bayar',
@@ -444,10 +622,7 @@ class CheckoutScreen extends StatelessWidget {
           ),
           onPressed: controller.isLoading.value || controller.selectedPaymentMethod.value == null
               ? null
-              : () {
-                  print('🛒 Buy Now button pressed');
-                  controller.processCheckout();
-                },
+              : () => controller.processCheckout(),
           child: Text(
             controller.isProcessing.value ? 'Memproses...' : 'Beli Sekarang',
             style: const TextStyle(

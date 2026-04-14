@@ -1,4 +1,6 @@
 // lib/models/payment_model.dart
+import 'package:mobile_supportyou/utils/value_formatter.dart';
+
 class PaymentMethod {
   final String name;
   final String? code;
@@ -39,4 +41,49 @@ class TransactionFee {
     required this.name,
     required this.nominal,
   });
+}
+
+class Discount {
+  final int id;
+  final String name;
+  final String ownedBy;
+  final dynamic member;
+  final String type;
+  final int value;
+  
+  Discount({
+    required this.id,
+    required this.name,
+    required this.ownedBy,
+    this.member,
+    required this.type,
+    required this.value,
+  });
+  
+  factory Discount.fromJson(Map<String, dynamic> json) {
+    return Discount(
+      id: json['id'],
+      name: json['name'],
+      ownedBy: json['owned_by'],
+      member: json['member'],
+      type: json['type'],
+      value: json['value'],
+    );
+  }
+  
+  int calculateDiscount(int price) {
+    if (type == 'percentage') {
+      return (price * value / 100).round();
+    } else {
+      return value; // nominal
+    }
+  }
+  
+  String getFormattedValue() {
+    if (type == 'percentage') {
+      return '$value%';
+    } else {
+      return Formatter.formatCurrency(value);
+    }
+  }
 }
