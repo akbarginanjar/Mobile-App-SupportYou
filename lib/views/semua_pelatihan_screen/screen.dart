@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/views/widgets/produk_skeleton.dart';
 import 'package:mobile_supportyou/views/widgets/search_field.dart';
@@ -17,15 +16,13 @@ class SemuaPelatihanScreen extends StatefulWidget {
 class _SemuaPelatihanScreenState extends State<SemuaPelatihanScreen> {
   final PelatihanController controller = Get.put(PelatihanController());
   final ScrollController _scrollController = ScrollController();
-  TextEditingController search = TextEditingController();
+  final TextEditingController search = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // 🔹 gunakan fungsi khusus untuk semua pelatihan
     controller.loadPelatihanAll();
 
-    // 👇 listener untuk lazy load
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
@@ -37,6 +34,7 @@ class _SemuaPelatihanScreenState extends State<SemuaPelatihanScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    search.dispose();
     super.dispose();
   }
 
@@ -47,9 +45,11 @@ class _SemuaPelatihanScreenState extends State<SemuaPelatihanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: theme,
-        surfaceTintColor: theme,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        elevation: 0,
         iconTheme: IconThemeData(color: primary),
         centerTitle: false,
         title: Column(
@@ -57,26 +57,34 @@ class _SemuaPelatihanScreenState extends State<SemuaPelatihanScreen> {
           children: [
             Text(
               'Semua Pelatihan',
-              style: GoogleFonts.poppins(
-                color: textTheme,
-                fontSize: 15,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
+                fontSize: 18,
               ),
             ),
+            const SizedBox(height: 2),
             Text(
               'Koleksi pelatihan tersedia',
-              style: GoogleFonts.poppins(fontSize: 12),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey[600],
+                fontSize: 12,
+              ),
             ),
           ],
         ),
-        bottom: AppBar(
-          elevation: 1,
-          shadowColor: Colors.black45,
-          surfaceTintColor: theme,
-          backgroundColor: theme,
-          automaticallyImplyLeading: false,
-          title: Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.grey[200]!,
+                  width: 1,
+                ),
+              ),
+            ),
             child: SearchField(
               controller: search,
               hintText: 'Cari pelatihan...',
@@ -90,33 +98,75 @@ class _SemuaPelatihanScreenState extends State<SemuaPelatihanScreen> {
       body: Obx(() {
         return RefreshIndicator(
           onRefresh: onRefresh,
+          color: primary,
           child: controller.isLoadingAll.value && controller.pelatihanListAll.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : GridView.builder(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(10),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 1,
-                    crossAxisSpacing: 1,
-                    childAspectRatio: 0.66,
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                       CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(primary),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Memuat pelatihan...',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
-                  // 👇 tambahkan slot ekstra untuk indikator loading bawah
-                  itemCount: controller.pelatihanListAll.length +
-                      (controller.isMoreLoadingAll.value ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index < controller.pelatihanListAll.length) {
-                      final pelatihan = controller.pelatihanListAll[index];
-                      return PelatihanCard(
-                        pelatihan: pelatihan,
-                      );
-                    } else {
-                      // 👇 indikator loading bawah
-                      return const ProdukSkeleton();
-                    }
-                  },
-                ),
+                )
+              : controller.pelatihanListAll.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.school_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Tidak ada pelatihan',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Coba kata kunci lain',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : GridView.builder(
+                      controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.7,
+                      ),
+                      itemCount: controller.pelatihanListAll.length +
+                          (controller.isMoreLoadingAll.value ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index < controller.pelatihanListAll.length) {
+                          final pelatihan = controller.pelatihanListAll[index];
+                          return PelatihanCard(
+                            pelatihan: pelatihan,
+                          );
+                        } else {
+                          return const ProdukSkeleton();
+                        }
+                      },
+                    ),
         );
       }),
     );

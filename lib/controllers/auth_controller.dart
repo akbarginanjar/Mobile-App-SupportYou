@@ -15,7 +15,7 @@ class AuthController extends GetxController {
   final phoneController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  
+
   // Controllers Tambahan untuk Register (Sesuai Payload)
   final namaLengkapController = TextEditingController();
   final usernameController = TextEditingController();
@@ -27,27 +27,6 @@ class AuthController extends GetxController {
   final isLoading = false.obs;
 
   Timer? _timer;
-
-  @override
-  void onInit() {
-    super.onInit();
-  }
-
-  void startCountdown() {
-    _timer?.cancel();
-    countdown.value = 60;
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (countdown.value <= 0) {
-        timer.cancel();
-      } else {
-        countdown.value--;
-      }
-    });
-  }
-
-  void updateOtp(String value) {
-    otp.value = value;
-  }
 
   @override
   void onClose() {
@@ -86,6 +65,22 @@ class AuthController extends GetxController {
       EasyLoading.showError('Gagal menghubungi server');
       debugPrint(e.toString());
     }
+  }
+
+  void startCountdown() {
+    _timer?.cancel();
+    countdown.value = 60;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (countdown.value <= 0) {
+        timer.cancel();
+      } else {
+        countdown.value--;
+      }
+    });
+  }
+
+  void updateOtp(String value) {
+    otp.value = value;
   }
 
   /// --- VERIFIKASI OTP ---
@@ -131,6 +126,8 @@ class AuthController extends GetxController {
         EasyLoading.showSuccess('Login Berhasil!');
         _saveSession(response.body);
         Get.offAll(() => const MainScreen());
+      } else {
+        EasyLoading.showError(response.body['message'] ?? 'Login gagal');
       }
     } catch (e) {
       isLoading.value = false;
@@ -141,38 +138,58 @@ class AuthController extends GetxController {
 
   /// --- REGISTER (NEW SESUAI PAYLOAD) ---
   Future<void> register() async {
-    isLoading.value = true;
-    
-    // Susun payload sesuai permintaan backend kamu
-    final Map<String, dynamic> payload = {
-      "nama_lengkap": namaLengkapController.text,
-      "email": emailController.text,
-      "username": usernameController.text,
-      "no_hp": phoneController.text,
-      "provinsi_id": "",
-      "kab_kota_id": "",
-      "kecamatan_id": "",
-      "kelurahan_id": "",
-      "alamat": "",
-      "password": passwordController.text,
-      "konfirmasi_password": konfirmasiPasswordController.text,
-      "request_otp": 1,
-    };
+  isLoading.value = true;
 
-    try {
-      final response = await _authService.register(payload);
-      isLoading.value = false;
+  final Map<String, dynamic> payload = {
+    "nama_lengkap": namaLengkapController.text,
+    "email": emailController.text,
+    "username": usernameController.text,
+    "no_hp": phoneController.text,
+    "provinsi_id": "",
+    "kab_kota_id": "",
+    "kecamatan_id": "",
+    "kelurahan_id": "",
+    "alamat": "",
+    "password": passwordController.text,
+    "konfirmasi_password": konfirmasiPasswordController.text,
+    "request_otp": 1,
+  };
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        EasyLoading.showSuccess('Registrasi Berhasil!');
-        // Jika request_otp: 1 mengirim OTP, arahkan ke OtpScreen. 
-        // Jika tidak, balik ke Login.
-        Get.back(); 
+  try {
+    final response = await _authService.register(payload);
+    isLoading.value = false;
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      EasyLoading.showSuccess('Registrasi Berhasil!');
+      Get.back();
+    } else {
+      final body = response.body;
+      if (body != null) {
+        if (body['errors'] != null) {
+          final errors = body['errors'];
+
+          // 🔹 cek email
+          if (errors['email'] != null && errors['email'] is List) {
+            EasyLoading.showError(errors['email'][0]);
+            return;
+          }
+          // 🔹 cek no_hp
+          if (errors['no_hp'] != null && errors['no_hp'] is List) {
+            EasyLoading.showError(errors['no_hp'][0]);
+            return;
+          }
+        }
+
+        // fallback ke message umum
+        EasyLoading.showError(body['message'] ?? 'Registrasi gagal');
+      } else {
+        EasyLoading.showError('Registrasi gagal');
       }
-    } catch (e) {
-      isLoading.value = false;
-      EasyLoading.showError('Gagal menghubungi server');
-      debugPrint(e.toString());
     }
+  } catch (e) {
+    isLoading.value = false;
+    // EasyLoading.showError('Gagal menghubungi server');
+    debugPrint(e.toString());
   }
+}
 }

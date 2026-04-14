@@ -5,7 +5,7 @@ import 'dart:async';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:mobile_supportyou/utils/base.dart';
-import 'package:mobile_supportyou/config/theme.dart'; // Import warna primary jika ada
+import 'package:mobile_supportyou/config/theme.dart';
 
 class AuthService extends GetConnect {
   final box = GetStorage();
@@ -67,8 +67,7 @@ class AuthService extends GetConnect {
     }
   }
 
-  /// 4. Register Affiliator (SESUAI PAYLOAD TERBARU)
-  /// Menggunakan Map body agar lebih fleksibel mengikuti payload yang kamu minta
+  /// 4. Register Affiliator
   Future<Response> register(Map<String, dynamic> body) async {
     try {
       EasyLoading.show(status: 'Mendaftarkan...');
@@ -87,15 +86,31 @@ class AuthService extends GetConnect {
       } else {
         // Ambil pesan error dari backend
         String msg = "Terjadi kesalahan";
-        if (conn.body is Map) {
+
+        if (conn.body is List) {
+          // API kirim array string error
+          msg = (conn.body as List).join("\n");
+        } else if (conn.body is Map) {
           msg = conn.body['message'] ?? "Data tidak valid";
         }
-
         Get.defaultDialog(
-          title: "Daftar Gagal",
-          middleText: msg,
+          title: "Gagal",
+          titleStyle: TextStyle(
+            color: Theme.of(Get.context!).colorScheme.error, // warna warning/error
+            fontWeight: FontWeight.bold,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                msg,
+                textAlign: TextAlign.center,
+                style: Theme.of(Get.context!).textTheme.bodyMedium,
+              ),
+            ],
+          ),
           textConfirm: "OKE",
-          buttonColor: primary, // Gunakan warna dari theme.dart kamu
+          buttonColor: Theme.of(Get.context!).colorScheme.error, // warna warning/error
           confirmTextColor: Colors.white,
           onConfirm: () => Get.back(),
         );
@@ -107,7 +122,7 @@ class AuthService extends GetConnect {
     }
   }
 
-  /// Helper simpan session agar kode tidak duplikat
+  /// Helper simpan session
   void _saveSession(dynamic responseBody) {
     box.write('tokens', responseBody['tokens']);
     box.write('id', responseBody['data']['id']);

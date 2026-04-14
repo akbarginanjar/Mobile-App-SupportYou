@@ -94,17 +94,17 @@ ThemeData defaultTheme(BuildContext context) {
         color: Colors.black87,
       ),
       bodyLarge: GoogleFonts.poppins(
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: FontWeight.w600,
         color: Colors.black87,
       ),
       bodyMedium: GoogleFonts.poppins(
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: FontWeight.w500,
         color: Colors.black87,
       ),
       bodySmall: GoogleFonts.poppins(
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: FontWeight.w400,
         color: Colors.black87,
       ),
