@@ -4,7 +4,7 @@ import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/views/widgets/produk_skeleton.dart';
 import 'package:mobile_supportyou/views/widgets/search_field.dart';
 import 'package:mobile_supportyou/controllers/pelatihan_controller.dart';
-import 'package:mobile_supportyou/views/widgets/pelatihan_card.dart';
+import 'package:mobile_supportyou/views/widgets/produk_card.dart';
 
 class SemuaPelatihanScreen extends StatefulWidget {
   const SemuaPelatihanScreen({super.key});
@@ -159,9 +159,7 @@ class _SemuaPelatihanScreenState extends State<SemuaPelatihanScreen> {
                       itemBuilder: (context, index) {
                         if (index < controller.pelatihanListAll.length) {
                           final pelatihan = controller.pelatihanListAll[index];
-                          return PelatihanCard(
-                            pelatihan: pelatihan,
-                          );
+                          return ProdukCard.forPelatihan(pelatihan: pelatihan);
                         } else {
                           return const ProdukSkeleton();
                         }

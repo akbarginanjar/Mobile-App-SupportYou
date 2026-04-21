@@ -90,7 +90,7 @@ class HomeScreen extends StatelessWidget {
                     ]
                   ),
                   const SizedBox(height: 8.0,),
-                  const KategoriScreen(),
+                  const KategoriSection(),
                   const SizedBox(height: 20.0),
                   const PelatihanSection(),
                   const SizedBox(height: 20.0),

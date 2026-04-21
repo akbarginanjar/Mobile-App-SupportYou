@@ -1,84 +1,165 @@
+// lib/views/home_screen/kategori_screen.dart
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:mobile_supportyou/config/theme.dart';
+import 'package:mobile_supportyou/controllers/kategori_controller.dart';
+import 'package:mobile_supportyou/views/kategori_pelatihan_screen/screen.dart';
 
-class KategoriScreen extends StatelessWidget {
-  const KategoriScreen({super.key});
+class KategoriSection extends StatelessWidget {
+  const KategoriSection({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(KategoriController());
+    
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Kategori Kursus",
-                style: Theme.of(context).textTheme.titleMedium
+                "Kategori",
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  // TODO: Navigasi ke halaman semua kategori
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
                 child: Row(
                   children: [
-                    const Text(
+                    Text(
                       "Lihat Semua",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: primary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    const Icon(Icons.arrow_forward_ios_rounded)
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: primary,
+                    ),
                   ],
                 ),
               ),
             ],
           ),
         ),
-        SizedBox(
-          height: 170,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+        
+        Obx(() {
+          if (controller.isLoading.value) {
+            return SizedBox(
+              height: 170,
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: primary,
+                ),
+              ),
+            );
+          }
+          
+          if (controller.kategoriList.isEmpty) {
+            return const SizedBox(
+              height: 170,
+              child: Center(
+                child: Text('Tidak ada kategori'),
+              ),
+            );
+          }
+          
+          // Filter hanya kategori yang statusnya true
+          final activeCategories = controller.kategoriList.where((k) => k.status).toList();
+          
+          if (activeCategories.isEmpty) {
+            return const SizedBox(
+              height: 170,
+              child: Center(
+                child: Text('Tidak ada kategori aktif'),
+              ),
+            );
+          }
+          
+          return SizedBox(
+            height: 170,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: activeCategories.length,
+              itemBuilder: (context, index) {
+                final kategori = activeCategories[index];
+                return Container(
+                  width: 140,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(15),
-                    onTap: () {},
+                    onTap: () {
+                      Get.to(() => PelatihanByKategoriScreen(
+                        kategoriId: kategori.id,
+                        kategoriNama: kategori.namaKategori,
+                      ));
+                    },
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(15),
                       child: Stack(
                         children: [
+                          // Background Image
                           Image.network(
-                            "https://images.pexels.com/photos/3913025/pexels-photo-3913025.jpeg",
+                            kategori.foto,
                             fit: BoxFit.cover,
-                            width: 130,
+                            width: 140,
                             height: 170,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 140,
+                                height: 170,
+                                color: Colors.grey[300],
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
+                              );
+                            },
                           ),
+                          // Dark Overlay
                           Container(
-                            width: 130,
+                            width: 140,
                             height: 170,
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withOpacity(0.4),
                           ),
+                          // Text Title
                           Align(
                             alignment: Alignment.bottomCenter,
                             child: Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: SizedBox(
-                                width: 130,
-                                child: const Text(
-                                  "AI Generatif",
-                                  textAlign: TextAlign.center,
-                                  softWrap: true,
-                                  overflow: TextOverflow.visible,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0, 2),
-                                        blurRadius: 6,
-                                        color: Colors.black87,
-                                      ),
-                                    ],
-                                  ),
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                kategori.namaKategori,
+                                textAlign: TextAlign.center,
+                                softWrap: true,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(0, 1),
+                                      blurRadius: 4,
+                                      color: Colors.black87,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -87,271 +168,11 @@ class KategoriScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(15),
-                    onTap: () {},
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Stack(
-                        children: [
-                          Image.network(
-                            "https://images.pexels.com/photos/2102416/pexels-photo-2102416.jpeg",
-                            fit: BoxFit.cover,
-                            width: 130,
-                            height: 170,
-                          ),
-                          Container(
-                            width: 130,
-                            height: 170,
-                            color: Colors.black.withOpacity(0.3),
-                          ),
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: SizedBox(
-                                width: 130,
-                                child: const Text(
-                                  "Sertifikasi TI",
-                                  textAlign: TextAlign.center,
-                                  softWrap: true,
-                                  overflow: TextOverflow.visible,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0, 2),
-                                        blurRadius: 6,
-                                        color: Colors.black87,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(15),
-                    onTap: () {},
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Stack(
-                        children: [
-                          Image.network(
-                            "https://images.pexels.com/photos/5380664/pexels-photo-5380664.jpeg",
-                            fit: BoxFit.cover,
-                            width: 130,
-                            height: 170,
-                          ),
-                          Container(
-                            width: 130,
-                            height: 170,
-                            color: Colors.black.withOpacity(0.3),
-                          ),
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: SizedBox(
-                                width: 130,
-                                child: const Text(
-                                  "Ilmu Data",
-                                  textAlign: TextAlign.center,
-                                  softWrap: true,
-                                  overflow: TextOverflow.visible,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0, 2),
-                                        blurRadius: 6,
-                                        color: Colors.black87,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(15),
-                    onTap: () {},
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Stack(
-                        children: [
-                          Image.network(
-                            "https://images.pexels.com/photos/5904086/pexels-photo-5904086.jpeg",
-                            fit: BoxFit.cover,
-                            width: 130,
-                            height: 170,
-                          ),
-                          Container(
-                            width: 130,
-                            height: 170,
-                            color: Colors.black.withOpacity(0.3),
-                          ),
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: SizedBox(
-                                width: 130,
-                                child: const Text(
-                                  "Desain UI/UX",
-                                  textAlign: TextAlign.center,
-                                  softWrap: true,
-                                  overflow: TextOverflow.visible,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0, 2),
-                                        blurRadius: 6,
-                                        color: Colors.black87,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(15),
-                    onTap: () {},
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Stack(
-                        children: [
-                          Image.network(
-                            "https://images.pexels.com/photos/6476254/pexels-photo-6476254.jpeg",
-                            fit: BoxFit.cover,
-                            width: 130,
-                            height: 170,
-                          ),
-                          Container(
-                            width: 130,
-                            height: 170,
-                            color: Colors.black.withOpacity(0.3),
-                          ),
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: SizedBox(
-                                width: 130,
-                                child: const Text(
-                                  "Pemasaran Digital",
-                                  textAlign: TextAlign.center,
-                                  softWrap: true,
-                                  overflow: TextOverflow.visible,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0, 2),
-                                        blurRadius: 6,
-                                        color: Colors.black87,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(15),
-                    onTap: () {},
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Stack(
-                        children: [
-                          Image.network(
-                            "https://images.pexels.com/photos/5475752/pexels-photo-5475752.jpeg",
-                            fit: BoxFit.cover,
-                            width: 130,
-                            height: 170,
-                          ),
-                          Container(
-                            width: 130,
-                            height: 170,
-                            color: Colors.black.withOpacity(0.3),
-                          ),
-                          Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: SizedBox(
-                                width: 130,
-                                child: const Text(
-                                  "Keamanan Siber",
-                                  textAlign: TextAlign.center,
-                                  softWrap: true,
-                                  overflow: TextOverflow.visible,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0, 2),
-                                        blurRadius: 6,
-                                        color: Colors.black87,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                );
+              },
             ),
-          ),
-        ),
+          );
+        }),
       ],
     );
   }

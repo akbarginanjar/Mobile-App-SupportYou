@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/pelatihan_controller.dart';
+import 'package:mobile_supportyou/views/widgets/produk_card.dart';
 import 'package:mobile_supportyou/views/widgets/produk_skeleton.dart';
 import 'package:mobile_supportyou/views/widgets/pelatihan_card.dart';
 import 'package:mobile_supportyou/views/semua_pelatihan_screen/screen.dart';
@@ -124,9 +125,7 @@ class PelatihanSection extends StatelessWidget {
                     left: index == 0 ? 0 : 8,
                     right: index == controller.pelatihanListHome.length - 1 ? 16 : 0,
                   ),
-                  child: PelatihanCard(
-                    pelatihan: pelatihan,
-                  ),
+                  child: ProdukCard.forPelatihan(pelatihan: pelatihan)
                 );
               },
             ),

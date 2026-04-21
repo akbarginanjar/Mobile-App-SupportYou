@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/main_controller.dart';
 import 'package:mobile_supportyou/views/home_screen/screen.dart';
+import 'package:mobile_supportyou/views/transaksi/screen.dart';
 
 import 'package:get_storage/get_storage.dart';
 import 'package:mobile_supportyou/views/login_nohp_screen/screen.dart';
@@ -17,7 +18,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
-    const Center(child: Text("Halaman Pesanan")),
+    const PilihTransaksiScreen(),
     const Center(child: Text("Halaman Keranjang")),
         Center(
       child: SizedBox(

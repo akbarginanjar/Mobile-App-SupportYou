@@ -1,14 +1,16 @@
+// lib/services/auth_service.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:mobile_supportyou/utils/base.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 
 class AuthService extends GetConnect {
-  final box = GetStorage();
+  final GetStorage box = GetStorage();
 
   // Header default
   Map<String, String> get _headers => {
@@ -54,6 +56,12 @@ class AuthService extends GetConnect {
       final Response conn = await post('${Base.url}/v1/auth/user-login', body, headers: _headers);
       EasyLoading.dismiss();
 
+      print('═══════════════════════════════════════════════════════════');
+      print('🔐 LOGIN RESPONSE');
+      print('Status Code: ${conn.statusCode}');
+      print('Response Body: ${conn.body}');
+      print('═══════════════════════════════════════════════════════════');
+
       if (conn.statusCode == 200) {
         EasyLoading.showSuccess('Login Berhasil!');
         _saveSession(conn.body);
@@ -84,11 +92,8 @@ class AuthService extends GetConnect {
       if (conn.statusCode == 200 || conn.statusCode == 201) {
         EasyLoading.showSuccess('Pendaftaran Berhasil!');
       } else {
-        // Ambil pesan error dari backend
         String msg = "Terjadi kesalahan";
-
         if (conn.body is List) {
-          // API kirim array string error
           msg = (conn.body as List).join("\n");
         } else if (conn.body is Map) {
           msg = conn.body['message'] ?? "Data tidak valid";
@@ -96,7 +101,7 @@ class AuthService extends GetConnect {
         Get.defaultDialog(
           title: "Gagal",
           titleStyle: TextStyle(
-            color: Theme.of(Get.context!).colorScheme.error, // warna warning/error
+            color: Theme.of(Get.context!).colorScheme.error,
             fontWeight: FontWeight.bold,
           ),
           content: Column(
@@ -110,7 +115,7 @@ class AuthService extends GetConnect {
             ],
           ),
           textConfirm: "OKE",
-          buttonColor: Theme.of(Get.context!).colorScheme.error, // warna warning/error
+          buttonColor: Theme.of(Get.context!).colorScheme.error,
           confirmTextColor: Colors.white,
           onConfirm: () => Get.back(),
         );
@@ -122,13 +127,71 @@ class AuthService extends GetConnect {
     }
   }
 
-  /// Helper simpan session
+  /// Helper simpan session - DIPERBAIKI untuk menyimpan member_id
   void _saveSession(dynamic responseBody) {
-    box.write('tokens', responseBody['tokens']);
-    box.write('id', responseBody['data']['id']);
-    box.write('no_hp', responseBody['data']['no_hp']);
-    box.write('email', responseBody['data']['email']);
-    box.write('nama_lengkap', responseBody['data']['nama_lengkap']);
+    print('═══════════════════════════════════════════════════════════');
+    print('💾 SAVING SESSION DATA');
+    print('Response body structure: ${responseBody.keys}');
+    
+    // Simpan tokens
+    if (responseBody['tokens'] != null) {
+      box.write('tokens', responseBody['tokens']);
+      print('✅ Tokens saved');
+    }
+    
+    // Simpan data user
+    if (responseBody['data'] != null && responseBody['data'] is Map) {
+      final userData = responseBody['data'];
+      
+      // Simpan basic user info
+      box.write('id', userData['id']);
+      box.write('no_hp', userData['no_hp']);
+      box.write('email', userData['email']);
+      box.write('nama_lengkap', userData['nama_lengkap']);
+      
+      // 🔥 PENTING: Simpan member_id (sesuai dengan project lain)
+      // Coba cari member_id di berbagai kemungkinan lokasi
+      int memberId = 0;
+      
+      // 1. Cek langsung di userData
+      if (userData['member_id'] != null) {
+        memberId = userData['member_id'];
+        print('📌 Member ID found in userData: $memberId');
+      }
+      // 2. Cek di dalam object karyawan (seperti project lain)
+      else if (userData['karyawan'] != null && userData['karyawan']['id'] != null) {
+        memberId = userData['karyawan']['id'];
+        print('📌 Member ID found in karyawan: $memberId');
+      }
+      // 3. Cek di dalam object member
+      else if (userData['member'] != null && userData['member']['id'] != null) {
+        memberId = userData['member']['id'];
+        print('📌 Member ID found in member: $memberId');
+      }
+      // 4. Fallback ke user id
+      else {
+        memberId = userData['id'];
+        print('⚠️ No member_id found, using user ID as fallback: $memberId');
+      }
+      
+      box.write('member_id', memberId);
+      print('✅ Member ID saved to storage: $memberId');
+      
+      // Simpan full user data
+      box.write('user_data', userData);
+    }
+    
+    // Simpan default address jika ada
+    if (responseBody['default_address'] != null) {
+      box.write('default_address', responseBody['default_address']);
+      box.write('default_address_id', responseBody['default_address']['id']);
+      print('✅ Default address saved: ID ${responseBody['default_address']['id']}');
+    }
+    
+    // Debug: Tampilkan semua keys yang tersimpan
+    print('📋 All stored keys: ${box.getKeys()}');
+    print('📋 member_id value: ${box.read('member_id')}');
+    print('═══════════════════════════════════════════════════════════');
   }
 
   void _handleError(dynamic e) {
@@ -140,5 +203,15 @@ class AuthService extends GetConnect {
     } else {
       Get.snackbar('Error', 'Terjadi kesalahan sistem.');
     }
+  }
+  
+  /// Method untuk mendapatkan member_id yang tersimpan
+  int getCurrentMemberId() {
+    return box.read('member_id') ?? 0;
+  }
+  
+  /// Method untuk mendapatkan user ID
+  int getCurrentUserId() {
+    return box.read('id') ?? 0;
   }
 }

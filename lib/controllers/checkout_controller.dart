@@ -1,16 +1,20 @@
 // lib/controllers/checkout_controller.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/models/payment_model.dart';
 import 'package:mobile_supportyou/services/payment_service.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
 import 'package:mobile_supportyou/views/checkout_screen/metode_pembayaran.dart';
 import 'package:mobile_supportyou/views/checkout_screen/voucher.dart';
+import 'package:mobile_supportyou/views/pembayaran/screen.dart';
 
 class CheckoutController extends GetxController {
   final Pelatihan pelatihan;
   final PaymentService _paymentService = PaymentService();
+  final GetStorage _storage = GetStorage();
   
   CheckoutController({required this.pelatihan});
   
@@ -33,10 +37,68 @@ class CheckoutController extends GetxController {
   // Total Price
   final totalPrice = 0.obs;
   
+  // User data
+  final konsumenMemberId = 0.obs;
+  final konsumenMemberAlamatId = 0.obs;
+  
   @override
   void onInit() {
     super.onInit();
+    _loadUserDataFromStorage();
     loadCheckoutData();
+  }
+  
+  void _loadUserDataFromStorage() {
+    print('═══════════════════════════════════════════════════════════');
+    print('👤 LOADING USER DATA FROM STORAGE');
+    print('All storage keys: ${_storage.getKeys()}');
+    
+    final memberId = _storage.read('member_id');
+    if (memberId != null) {
+      konsumenMemberId.value = memberId is int ? memberId : int.tryParse(memberId.toString()) ?? 0;
+      print('✅ Member ID from "member_id": ${konsumenMemberId.value}');
+    }
+    
+    if (konsumenMemberId.value == 0) {
+      final userData = _storage.read('user_data');
+      if (userData != null && userData is Map) {
+        if (userData['member_id'] != null) {
+          konsumenMemberId.value = userData['member_id'] is int 
+              ? userData['member_id'] 
+              : int.tryParse(userData['member_id'].toString()) ?? 0;
+          print('✅ Member ID from user_data: ${konsumenMemberId.value}');
+        }
+        else if (userData['karyawan'] != null && userData['karyawan']['id'] != null) {
+          konsumenMemberId.value = userData['karyawan']['id'];
+          print('✅ Member ID from user_data.karyawan: ${konsumenMemberId.value}');
+        }
+      }
+    }
+    
+    if (konsumenMemberId.value == 0) {
+      final userId = _storage.read('id');
+      if (userId != null) {
+        konsumenMemberId.value = userId is int ? userId : int.tryParse(userId.toString()) ?? 0;
+        print('⚠️ WARNING: Using user ID as fallback: ${konsumenMemberId.value}');
+      }
+    }
+    
+    final defaultAddressId = _storage.read('default_address_id');
+    if (defaultAddressId != null) {
+      konsumenMemberAlamatId.value = defaultAddressId is int 
+          ? defaultAddressId 
+          : int.tryParse(defaultAddressId.toString()) ?? 15;
+      print('✅ Address ID from "default_address_id": ${konsumenMemberAlamatId.value}');
+    }
+    
+    if (konsumenMemberAlamatId.value == 0) {
+      konsumenMemberAlamatId.value = 15;
+      print('⚠️ Using default address ID: ${konsumenMemberAlamatId.value}');
+    }
+    
+    print('✅ FINAL konsumen_member_id: ${konsumenMemberId.value}');
+    print('✅ FINAL konsumen_member_alamat_id: ${konsumenMemberAlamatId.value}');
+    print('═══════════════════════════════════════════════════════════');
   }
   
   Future<void> loadCheckoutData() async {
@@ -48,7 +110,9 @@ class CheckoutController extends GetxController {
         loadAvailableDiscounts(),
       ]);
       calculateTotalPrice();
+      print('✅ Checkout data loaded successfully');
     } catch (e) {
+      print('❌ Error loading checkout data: $e');
       Get.snackbar(
         'Error',
         'Gagal memuat data checkout: ${e.toString().replaceFirst('Exception: ', '')}',
@@ -100,10 +164,12 @@ class CheckoutController extends GetxController {
         }
         
         paymentGroups.value = groups;
+        print('✅ Loaded ${groups.length} payment groups');
       } else {
         throw Exception('Invalid response from server');
       }
     } catch (e) {
+      print('❌ Error loading payment methods: $e');
       rethrow;
     }
   }
@@ -116,13 +182,15 @@ class CheckoutController extends GetxController {
         for (var fee in response) {
           if (fee['code'] == 'biaya-layanan') {
             serviceFee.value = fee['nominal'];
+            print('✅ Service fee: ${serviceFee.value}');
           } else if (fee['code'] == 'biaya-aplikasi') {
             appFee.value = fee['nominal'];
+            print('✅ App fee: ${appFee.value}');
           }
         }
       }
     } catch (e) {
-      // Use default values (0)
+      print('❌ Error loading transaction fees: $e');
     }
   }
   
@@ -132,9 +200,10 @@ class CheckoutController extends GetxController {
       
       if (response is List) {
         availableDiscounts.value = response.map((json) => Discount.fromJson(json)).toList();
+        print('✅ Loaded ${availableDiscounts.length} discounts');
       }
     } catch (e) {
-      // No discounts available
+      print('❌ Error loading discounts: $e');
     }
   }
   
@@ -148,6 +217,7 @@ class CheckoutController extends GetxController {
     
     if (result != null && result is PaymentMethod) {
       selectedPaymentMethod.value = result;
+      print('✅ Payment method selected: ${result.name}');
     }
   }
   
@@ -164,9 +234,11 @@ class CheckoutController extends GetxController {
     if (result != null && result is Discount) {
       selectedDiscount.value = result;
       discountAmount.value = result.calculateDiscount(basePrice);
+      print('✅ Discount selected: ${result.name}, amount: ${discountAmount.value}');
     } else if (result == null) {
       selectedDiscount.value = null;
       discountAmount.value = 0;
+      print('✅ Discount removed');
     }
     calculateTotalPrice();
   }
@@ -175,6 +247,16 @@ class CheckoutController extends GetxController {
     final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
     final total = basePrice + serviceFee.value + appFee.value - discountAmount.value;
     totalPrice.value = total;
+    
+    print('═══════════════════════════════════════════════════════════');
+    print('💰 PRICE CALCULATION');
+    print('Base Price: ${pelatihan.harga}');
+    print('Final Price: ${pelatihan.hargaFinal ?? pelatihan.harga}');
+    print('Service Fee: ${serviceFee.value}');
+    print('App Fee: ${appFee.value}');
+    print('Discount: ${discountAmount.value}');
+    print('Total Price: ${totalPrice.value}');
+    print('═══════════════════════════════════════════════════════════');
   }
   
   String getSelectedPaymentMethodName() {
@@ -194,7 +276,12 @@ class CheckoutController extends GetxController {
   }
   
   Future<void> processCheckout() async {
+    print('═══════════════════════════════════════════════════════════');
+    print('🛒 PROCESSING CHECKOUT');
+    print('═══════════════════════════════════════════════════════════');
+    
     if (selectedPaymentMethod.value == null) {
+      print('❌ No payment method selected');
       Get.snackbar(
         'Peringatan',
         'Silakan pilih metode pembayaran terlebih dahulu',
@@ -205,27 +292,59 @@ class CheckoutController extends GetxController {
       return;
     }
     
+    if (konsumenMemberId.value == 0) {
+      print('❌ Member ID is 0, cannot proceed');
+      Get.snackbar(
+        'Error',
+        'Data member tidak ditemukan. Silakan login kembali.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    
+    print('Selected payment method: ${selectedPaymentMethod.value?.name}');
+    print('Payment code: ${selectedPaymentMethod.value?.code}');
+    print('Member ID (konsumen_member_id): ${konsumenMemberId.value}');
+    print('Address ID: ${konsumenMemberAlamatId.value}');
+    
     isProcessing.value = true;
     
     try {
+      final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
+      
       final checkoutData = {
-        'pelatihan_id': pelatihan.id,
-        'pelatihan_nama': pelatihan.nama,
-        'payment_method_code': selectedPaymentMethod.value?.code,
-        'payment_method_name': selectedPaymentMethod.value?.name,
-        'total_price': totalPrice.value,
-        'service_fee': serviceFee.value,
-        'app_fee': appFee.value,
-        'discount_id': selectedDiscount.value?.id,
-        'discount_name': selectedDiscount.value?.name,
-        'discount_amount': discountAmount.value,
-        'original_price': pelatihan.harga,
-        'final_price': pelatihan.hargaFinal ?? pelatihan.harga,
+        'konsumen_member_id': konsumenMemberId.value,
+        'konsumen_member_alamat_id': konsumenMemberAlamatId.value,
+        'uang_masuk': basePrice,
+        'ongkir': 0,
+        'biaya_aplikasi': appFee.value,
+        'biaya_layanan': serviceFee.value,
+        'items': [
+          {
+            'pelatihan_id': pelatihan.id,
+            'qty': 1,
+            'harga': basePrice,
+          }
+        ],
+        'metode_bayar': 'payment_gateway',
+        'payment_code': selectedPaymentMethod.value?.code,
+        'payment_type': selectedPaymentMethod.value?.type ?? 'bank_transfer',
+        'transaction_type': 'pelatihan',
       };
+      
+      print('📦 Checkout Payload: ${jsonEncode(checkoutData)}');
       
       final response = await _paymentService.createCheckout(checkoutData);
       
-      if (response['status'] == true) {
+      print('📦 Checkout Response: $response');
+      
+      if (response != null && response['id'] != null) {
+        print('✅ Checkout successful!');
+        print('Transaction ID: ${response['id']}');
+        print('No Invoice: ${response['no_invoice']}');
+        
         Get.snackbar(
           'Sukses',
           'Pesanan berhasil dibuat',
@@ -235,13 +354,15 @@ class CheckoutController extends GetxController {
           duration: const Duration(seconds: 2),
         );
         
-        await Future.delayed(const Duration(seconds: 2));
-        Get.back();
+        Get.offAll(() => PembayaranScreen(
+              idTransaksi: response['id'],
+            ));
       } else {
         throw Exception(response['message'] ?? 'Gagal memproses pesanan');
       }
       
     } catch (e) {
+      print('❌ Error processing checkout: $e');
       Get.snackbar(
         'Error',
         'Gagal memproses pesanan: ${e.toString().replaceFirst('Exception: ', '')}',
@@ -252,6 +373,7 @@ class CheckoutController extends GetxController {
       );
     } finally {
       isProcessing.value = false;
+      print('═══════════════════════════════════════════════════════════');
     }
   }
 }
