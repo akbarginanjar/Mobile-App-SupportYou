@@ -1,15 +1,25 @@
-// lib/views/transaksi/transaksi_pelatihan/tab_views/expired_tabview.dart
+// lib/views/transaksi/transaksi_pelatihan/tab_views/pending_tabview.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/transaksi_pelatihan_controller.dart';
 import 'package:mobile_supportyou/views/transaksi/transaksi_pelatihan/card/screen.dart';
 
-class ExpiredTabView extends StatelessWidget {
+class ExpiredTabView extends StatefulWidget {
   const ExpiredTabView({super.key});
 
   @override
+  State<ExpiredTabView> createState() => _ExpiredTabViewState();
+}
+
+class _ExpiredTabViewState extends State<ExpiredTabView> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
+    
     final TransaksiPelatihanController controller = Get.find<TransaksiPelatihanController>();
     
     return Obx(() {
@@ -33,13 +43,13 @@ class ExpiredTabView extends StatelessWidget {
             children: [
               Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Gagal memuat transaksi',
               ),
               const SizedBox(height: 8),
               Text(
                 controller.errorExpired.value,
-                style: TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 12),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -51,7 +61,7 @@ class ExpiredTabView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text('Coba Lagi', style: TextStyle(color: textTheme),),
+                child: const Text('Coba Lagi', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -63,10 +73,10 @@ class ExpiredTabView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.timer_off, size: 64),
+              Icon(Icons.hourglass_empty, size: 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
-              Text(
-                "Tidak ada transaksi kadaluarsa",
+              const Text(
+                "Tidak ada transaksi expired",
               ),
             ],
           ),

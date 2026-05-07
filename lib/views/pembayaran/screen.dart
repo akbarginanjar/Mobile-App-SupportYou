@@ -1,27 +1,92 @@
-// lib/views/pembayaran/screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
-import 'package:mobile_supportyou/controllers/transaksi_controller.dart';
+import 'package:mobile_supportyou/controllers/checkout_controller.dart';
+import 'package:mobile_supportyou/models/pelatihan_model.dart';
+import 'package:mobile_supportyou/models/payment_model.dart';
+import 'package:mobile_supportyou/services/komplain_service.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
 import 'package:mobile_supportyou/views/main_screen/screen.dart';
+import 'package:mobile_supportyou/views/pembayaran/widgets/komplain_dialog.dart';
 
-class PembayaranScreen extends StatelessWidget {
+class PembayaranScreen extends StatefulWidget {
   final int? idTransaksi;
+  final Pelatihan pelatihan;
+  final double? discountAmount;
+  final String? discountName;
   
   const PembayaranScreen({
     super.key,
     required this.idTransaksi,
+    required this.pelatihan,
+    this.discountAmount,
+    this.discountName,
   });
 
   @override
+  State<PembayaranScreen> createState() => _PembayaranScreenState();
+}
+
+class _PembayaranScreenState extends State<PembayaranScreen> with AutomaticKeepAliveClientMixin {
+  late CheckoutController _controller;
+  final KomplainService _komplainService = KomplainService();
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeController();
+  }
+
+  void _initializeController() {
+    if (Get.isRegistered<CheckoutController>()) {
+      _controller = Get.find<CheckoutController>();
+    } else {
+      _controller = Get.put(CheckoutController(pelatihan: widget.pelatihan));
+    }
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.discountAmount != null && widget.discountAmount! > 0) {
+        _controller.discountAmount.value = widget.discountAmount!.toInt();
+        if (widget.discountName != null) {
+          final discount = Discount(
+            id: 0,
+            name: widget.discountName!,
+            ownedBy: 'user',
+            member: null,
+            type: 'nominal',
+            value: widget.discountAmount!.toInt(),
+          );
+          _controller.selectedDiscount.value = discount;
+        }
+        _controller.calculateTotalPrice();
+      }
+      
+      _controller.getInvoice(widget.idTransaksi);
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = Get.put(TransaksiController());
-    controller.getInvoice(idTransaksi);
+    super.build(context);
     
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: primary),
+          onPressed: () {
+            Get.offAll(() => const MainScreen());
+          },
+        ),
         title: Text(
           'Detail Pembayaran',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -33,17 +98,19 @@ class PembayaranScreen extends StatelessWidget {
         foregroundColor: primary,
         actions: [
           IconButton(
-            onPressed: () => controller.getInvoice(idTransaksi),
+            onPressed: () => _controller.getInvoice(widget.idTransaksi),
             icon: const Icon(Icons.refresh),
           ),
         ],
       ),
       body: Obx(() {
-        if (controller.isLoading.value) {
+        final data = _controller.invoiceData.value;
+        
+        if (_controller.isInvoiceLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
         
-        if (controller.isError.value || controller.invoiceData.value == null) {
+        if (_controller.isInvoiceError.value || data == null) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -56,7 +123,7 @@ class PembayaranScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => controller.getInvoice(idTransaksi),
+                  onPressed: () => _controller.getInvoice(widget.idTransaksi),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
                     shape: RoundedRectangleBorder(
@@ -75,40 +142,33 @@ class PembayaranScreen extends StatelessWidget {
           );
         }
         
-        final data = controller.invoiceData.value!;
         final status = data['status'] ?? '';
         final statusBayar = data['status_bayar'] ?? '';
+        final metodeBayar = data['metode_bayar'] ?? '';
+        final paymentInfo = data['payment_info'];
+        final int transaksiId = data['id'] ?? 0;
+        final refundStatus = _komplainService.getRefundStatus(transaksiId);
         
         return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Countdown Timer atau Status Message
-              _buildStatusHeader(context, controller, data),
+              _buildStatusHeader(context, data, refundStatus),
               
-              // Payment Info (hanya untuk yang belum lunas dan status pending)
-              if (statusBayar == 'belum_lunas' && status == 'pending')
-                _buildPaymentInfo(context, data, controller),
+              if (statusBayar == 'belum_lunas' && status != 'dibatalkan' && status != 'selesai' && refundStatus != 'pending') ...[
+                if (metodeBayar == 'payment_gateway' && paymentInfo != null) ...[
+                  if (paymentInfo['payment_type'] == 'qris')
+                    _buildQrisPaymentInfo(context, data),
+                  if (paymentInfo['payment_type'] == 'bank_transfer')
+                    _buildVirtualAccountInfo(context, data),
+                ],
+                _buildCheckStatusButton(context),
+              ],
               
-              // Check Payment Status Button (hanya untuk yang belum lunas dan status pending)
-              if (statusBayar == 'belum_lunas' && status == 'pending')
-                _buildCheckStatusButton(context, controller, idTransaksi),
-              
-              // Payment Success Info
-              if (statusBayar == 'lunas')
-                _buildPaymentSuccessInfo(context),
-              
-              // Invoice Info
-              _buildInvoiceInfo(context, data, controller),
-              
-              // Product Info
+              _buildInvoiceInfo(context, data),
               _buildProductInfo(context, data),
-              
-              // Order Summary
               _buildOrderSummary(context, data),
-              
-              // Action Buttons
-              _buildActionButtons(context, data, controller),
+              _buildActionButtons(context, data, refundStatus),
               
               const SizedBox(height: 20),
             ],
@@ -118,11 +178,42 @@ class PembayaranScreen extends StatelessWidget {
     );
   }
   
-  Widget _buildStatusHeader(BuildContext context, TransaksiController controller, Map<String, dynamic> data) {
+  Widget _buildStatusHeader(BuildContext context, Map<String, dynamic> data, String? refundStatus) {
     final status = data['status'] ?? '';
     final statusBayar = data['status_bayar'] ?? '';
     
-    // Status Expired
+    if (refundStatus == 'pending') {
+      return Container(
+        width: double.infinity,
+        color: Colors.orange[50],
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(Icons.pending_actions, size: 48, color: Colors.orange[700]),
+            const SizedBox(height: 8),
+            Text(
+              'Pengajuan Refund',
+              style: TextStyle(
+                color: Colors.orange[700],
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'pending',
+              style: TextStyle(
+                color: Colors.orange[600],
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+    
     if (status == 'expired') {
       return Container(
         width: double.infinity,
@@ -151,7 +242,6 @@ class PembayaranScreen extends StatelessWidget {
       );
     }
     
-    // Status Dibatalkan
     if (status == 'dibatalkan') {
       return Container(
         width: double.infinity,
@@ -180,7 +270,6 @@ class PembayaranScreen extends StatelessWidget {
       );
     }
     
-    // Countdown Timer untuk pending payment
     if (statusBayar == 'belum_lunas' && status == 'pending') {
       return Container(
         width: double.infinity,
@@ -201,7 +290,7 @@ class PembayaranScreen extends StatelessWidget {
                 const Icon(Icons.timer, color: Colors.red, size: 24),
                 const SizedBox(width: 8),
                 Obx(() => Text(
-                  controller.countdown.value.isEmpty ? 'Menghitung...' : controller.countdown.value,
+                  _controller.countdown.value.isEmpty ? 'Menghitung...' : _controller.countdown.value,
                   style: const TextStyle(
                     color: Colors.red,
                     fontSize: 20,
@@ -215,112 +304,56 @@ class PembayaranScreen extends StatelessWidget {
       );
     }
     
-    return const SizedBox.shrink();
-  }
-  
-  Widget _buildPaymentInfo(BuildContext context, Map<String, dynamic> data, TransaksiController controller) {
-    final paymentInfo = data['payment_info'];
-    final metodeBayar = data['metode_bayar'];
-    
-    if (metodeBayar == 'payment_gateway' && paymentInfo != null && paymentInfo['payment_type'] == 'bank_transfer') {
-      final vaNumbers = paymentInfo['payment_detail']?['va_numbers'];
-      final vaNumber = vaNumbers != null && vaNumbers.isNotEmpty ? vaNumbers[0]['va_number'] : '-';
-      final bankCode = paymentInfo['payment_code']?.toUpperCase() ?? '-';
-      
+    if (statusBayar == 'lunas' && status == 'selesai') {
       return Container(
-        margin: const EdgeInsets.all(16),
+        width: double.infinity,
+        color: Colors.green[50],
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Icon(Icons.check_circle, size: 48, color: Colors.green[700]),
+            const SizedBox(height: 8),
             Text(
-              'Virtual Account',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              'Pesanan Selesai',
+              style: TextStyle(
+                color: Colors.green[700],
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Silahkan transfer ke Virtual Account berikut',
-              style: Theme.of(context).textTheme.bodySmall,
+              'Terima kasih telah menggunakan layanan kami',
+              style: TextStyle(color: Colors.green[600], fontSize: 13),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
-            
-            // 🔥 Menggunakan ListTile dengan ukuran lebih kecil
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[200]!),
+          ],
+        ),
+      );
+    }
+    
+    if (statusBayar == 'lunas' && status != 'selesai') {
+      return Container(
+        width: double.infinity,
+        color: Colors.blue[50],
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(Icons.pending, size: 48, color: Colors.blue[700]),
+            const SizedBox(height: 8),
+            Text(
+              'Pembayaran Diterima',
+              style: TextStyle(
+                color: Colors.blue[700],
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
-              child: Row(
-                children: [
-                  // Bank Code (kiri)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      bankCode,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: primary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // VA Number (tengah - flexibel)
-                  Expanded(
-                    child: Text(
-                      vaNumber,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: primary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.visible,
-                      softWrap: false,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Tombol Salin (kanan)
-                  OutlinedButton(
-                    onPressed: () => controller.copyToClipboard(vaNumber),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      minimumSize: const Size(60, 32),
-                    ),
-                    child: Text(
-                      'SALIN',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Pesanan Anda sedang diproses',
+              style: TextStyle(color: Colors.blue[600], fontSize: 13),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -330,12 +363,333 @@ class PembayaranScreen extends StatelessWidget {
     return const SizedBox.shrink();
   }
   
-  Widget _buildCheckStatusButton(BuildContext context, TransaksiController controller, int? idTransaksi) {
+  Widget _buildQrisPaymentInfo(BuildContext context, Map<String, dynamic> data) {
+    final paymentInfo = data['payment_info'];
+    final qrisUrl = paymentInfo?['payment_detail']?['qris_url'];
+    final totalBayar = data['total_bayar'] ?? 0;
+    
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'QRIS',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Silakan scan QR Code (QRIS) berikut',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: qrisUrl != null && qrisUrl.isNotEmpty
+                  ? Image.network(
+                      qrisUrl,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 200,
+                          height: 200,
+                          color: Colors.grey[200],
+                          child: const Icon(
+                            Icons.qr_code,
+                            size: 80,
+                            color: Colors.grey,
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      width: 200,
+                      height: 200,
+                      color: Colors.grey[200],
+                      child: const Icon(
+                        Icons.qr_code,
+                        size: 80,
+                        color: Colors.grey,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 20, color: Colors.blue[700]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Total yang harus dibayar:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.blue[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      Formatter.formatCurrency(totalBayar),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildVirtualAccountInfo(BuildContext context, Map<String, dynamic> data) {
+    final paymentInfo = data['payment_info'];
+    final vaNumbers = paymentInfo?['payment_detail']?['va_numbers'];
+    final vaNumber = vaNumbers != null && vaNumbers.isNotEmpty ? vaNumbers[0]['va_number'] : '-';
+    final bankCode = paymentInfo?['payment_code']?.toUpperCase() ?? '-';
+    final totalBayar = data['total_bayar'] ?? 0;
+    
+    String bankName = '';
+    Color bankColor = primary;
+    
+    switch (bankCode.toLowerCase()) {
+      case 'bca':
+        bankName = 'BCA';
+        bankColor = const Color(0xFF0066AA);
+        break;
+      case 'bni':
+        bankName = 'BNI';
+        bankColor = const Color(0xFF0055A4);
+        break;
+      case 'bri':
+        bankName = 'BRI';
+        bankColor = const Color(0xFF0066CC);
+        break;
+      case 'mandiri':
+        bankName = 'Mandiri';
+        bankColor = const Color(0xFF0055A4);
+        break;
+      default:
+        bankName = bankCode;
+        bankColor = primary;
+    }
+    
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: bankColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.account_balance, color: bankColor, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Bank $bankName',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Silakan transfer ke Virtual Account berikut',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: bankColor.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: bankColor.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Virtual Account',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: bankColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        bankName,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        vaNumber,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: bankColor,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => _controller.copyToClipboard(vaNumber),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: bankColor),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        minimumSize: const Size(60, 36),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.copy, size: 16, color: bankColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            'SALIN',
+                            style: TextStyle(
+                              color: bankColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 20, color: Colors.blue[700]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Total yang harus ditransfer:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.blue[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      Formatter.formatCurrency(totalBayar),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildCheckStatusButton(BuildContext context) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.all(16),
       child: ElevatedButton(
-        onPressed: () => controller.getInvoice(idTransaksi),
+        onPressed: () => _controller.getInvoice(widget.idTransaksi),
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
           shape: RoundedRectangleBorder(
@@ -353,35 +707,7 @@ class PembayaranScreen extends StatelessWidget {
     );
   }
   
-  Widget _buildPaymentSuccessInfo(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: Colors.green[50],
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green, size: 48),
-          const SizedBox(height: 8),
-          Text(
-            'Pembayaran Berhasil',
-            style: TextStyle(
-              color: Colors.green[800],
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Pesanan Anda sedang diproses',
-            style: TextStyle(color: Colors.green[600]),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildInvoiceInfo(BuildContext context, Map<String, dynamic> data, TransaksiController controller) {
-    // Cek apakah toko ada dan memiliki nama yang valid
+  Widget _buildInvoiceInfo(BuildContext context, Map<String, dynamic> data) {
     final bool hasToko = data['toko'] != null && 
                          data['toko'] is Map && 
                          (data['toko']['nama_lengkap'] != null || data['toko']['nama'] != null);
@@ -424,7 +750,7 @@ class PembayaranScreen extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () => controller.copyToClipboard(data['no_invoice'] ?? '-'),
+                onPressed: () => _controller.copyToClipboard(data['no_invoice'] ?? '-'),
                 icon: Icon(Icons.copy, size: 18, color: primary),
               ),
             ],
@@ -458,14 +784,12 @@ class PembayaranScreen extends StatelessWidget {
             ),
           ),
           
-          // DITERBITKAN ATAS NAMA (hanya jika ada)
           if (hasToko && penjual != null && penjual.isNotEmpty && penjual != 'null') ...[
             const SizedBox(height: 16),
             Text(
               'DITERBITKAN ATAS NAMA',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: Colors.grey,
               ),
             ),
             const SizedBox(height: 4),
@@ -484,7 +808,6 @@ class PembayaranScreen extends StatelessWidget {
             'UNTUK',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: Colors.grey,
             ),
           ),
           const SizedBox(height: 8),
@@ -508,20 +831,22 @@ class PembayaranScreen extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
           Text(
             ': ',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey,
+              fontWeight: FontWeight.w500,
             ),
           ),
           Expanded(
             child: Text(
               value ?? '-',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -530,6 +855,8 @@ class PembayaranScreen extends StatelessWidget {
   }
   
   Widget _buildProductInfo(BuildContext context, Map<String, dynamic> data) {
+    final items = data['item'] as List? ?? [];
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -548,10 +875,9 @@ class PembayaranScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'INFO PELATIHAN',
+            'INFO PRODUK',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: Colors.grey,
             ),
           ),
           const SizedBox(height: 12),
@@ -561,9 +887,9 @@ class PembayaranScreen extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: Text(
-                  'PELATIHAN',
+                  'PRODUK',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -571,7 +897,7 @@ class PembayaranScreen extends StatelessWidget {
                 child: Text(
                   'QTY',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -581,7 +907,7 @@ class PembayaranScreen extends StatelessWidget {
                 child: Text(
                   'HARGA',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -591,7 +917,7 @@ class PembayaranScreen extends StatelessWidget {
                 child: Text(
                   'TOTAL',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -600,8 +926,8 @@ class PembayaranScreen extends StatelessWidget {
           ),
           Divider(color: Colors.grey[300]),
           
-          ...(data['item'] as List?)?.map((item) {
-            return Padding(
+          for (final item in items)
+            Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
@@ -609,13 +935,17 @@ class PembayaranScreen extends StatelessWidget {
                     flex: 3,
                     child: Text(
                       item['nama'] ?? '-',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   Expanded(
                     child: Text(
                       '${item['qty']}',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -623,7 +953,9 @@ class PembayaranScreen extends StatelessWidget {
                     flex: 2,
                     child: Text(
                       Formatter.formatCurrency(item['harga'] ?? 0),
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
                       textAlign: TextAlign.right,
                     ),
                   ),
@@ -639,14 +971,23 @@ class PembayaranScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            );
-          }).toList() ?? [],
+            ),
         ],
       ),
     );
   }
   
   Widget _buildOrderSummary(BuildContext context, Map<String, dynamic> data) {
+    final items = data['item'] as List? ?? [];
+    final item = items.isNotEmpty ? items[0] : null;
+    
+    final hargaPelatihan = item?['total_harga'] ?? item?['harga'] ?? 0;
+    final biayaLayanan = data['biaya_layanan'] ?? 0;
+    final biayaAplikasi = data['biaya_aplikasi'] ?? 0;
+    final totalBayar = data['total_bayar'] ?? 0;
+    
+    final diskon = (hargaPelatihan + biayaLayanan + biayaAplikasi) - totalBayar;
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       padding: const EdgeInsets.all(16),
@@ -668,27 +1009,50 @@ class PembayaranScreen extends StatelessWidget {
             'RINGKASAN BELANJA',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: Colors.grey,
             ),
           ),
           const SizedBox(height: 12),
-          _buildSummaryRow(context, 'TOTAL HARGA', Formatter.formatCurrency(data['total_harga'] ?? 0)),
-          const SizedBox(height: 8),
-          _buildSummaryRow(context, 'BIAYA LAYANAN', Formatter.formatCurrency(data['biaya_layanan'] ?? 0)),
-          const SizedBox(height: 8),
-          _buildSummaryRow(context, 'BIAYA APLIKASI', Formatter.formatCurrency(data['biaya_aplikasi'] ?? 0)),
-          const SizedBox(height: 8),
-          _buildSummaryRow(context, 'BIAYA TRANSAKSI', Formatter.formatCurrency(data['biaya_pg'] ?? 0)),
           
-          Divider(color: Colors.grey[300], height: 24),
+          _buildSummaryRow(context, 'HARGA PELATIHAN', Formatter.formatCurrency(hargaPelatihan)),
+          const SizedBox(height: 8),
           
-          _buildSummaryRow(context, 'TOTAL BELANJA', Formatter.formatCurrency(data['total_bayar'] ?? 0), isBold: true),
+          _buildSummaryRow(context, 'BIAYA LAYANAN', Formatter.formatCurrency(biayaLayanan)),
+          const SizedBox(height: 8),
+          
+          _buildSummaryRow(context, 'BIAYA APLIKASI', Formatter.formatCurrency(biayaAplikasi)),
+          const SizedBox(height: 8),
+          
+          const Divider(color: Colors.grey, thickness: 0.5),
+          const SizedBox(height: 8),
+          
+          if (diskon > 0) ...[
+            _buildSummaryRow(
+              context, 
+              'DISKON', 
+              '- ${Formatter.formatCurrency(diskon)}',
+              isDiscount: true,
+            ),
+            const SizedBox(height: 8),
+          ],
+          
+          const Divider(color: Colors.grey, thickness: 0.5),
+          const SizedBox(height: 8),
+          
+          _buildSummaryRow(
+            context, 
+            'TOTAL BELANJA', 
+            Formatter.formatCurrency(totalBayar), 
+            isTotal: true,
+          ),
         ],
       ),
     );
   }
   
-  Widget _buildSummaryRow(BuildContext context, String label, String value, {bool isBold = false}) {
+  Widget _buildSummaryRow(BuildContext context, String label, String value, {
+    bool isTotal = false, 
+    bool isDiscount = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -697,15 +1061,16 @@ class PembayaranScreen extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: isDiscount ? Colors.red : (isTotal ? Colors.black87 : textTheme),
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
             ),
           ),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.black87,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            style: TextStyle(
+              color: isDiscount ? Colors.red : (isTotal ? primary : textTheme),
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+              fontSize: isTotal ? 16 : 13,
             ),
           ),
         ],
@@ -713,7 +1078,7 @@ class PembayaranScreen extends StatelessWidget {
     );
   }
   
-  Widget _buildActionButtons(BuildContext context, Map<String, dynamic> data, TransaksiController controller) {
+  Widget _buildActionButtons(BuildContext context, Map<String, dynamic> data, String? refundStatus) {
     final status = data['status'] ?? '';
     final statusBayar = data['status_bayar'] ?? '';
     
@@ -721,11 +1086,10 @@ class PembayaranScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Tombol Batalkan Pesanan (hanya untuk status pending)
           if (status == 'pending' && statusBayar == 'belum_lunas')
             ElevatedButton(
               onPressed: () {
-                _showCancelDialog(context, controller, data['no_invoice']);
+                _showCancelDialog(context, data['no_invoice']);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
@@ -742,32 +1106,44 @@ class PembayaranScreen extends StatelessWidget {
                 ),
               ),
             ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () {
-              Get.offAll(() => const MainScreen());
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          
+          if (status == 'selesai' && statusBayar == 'lunas' && refundStatus != 'pending')
+            ElevatedButton.icon(
+              onPressed: () {
+                final items = data['item'] as List? ?? [];
+                final item = items.isNotEmpty ? items[0] : null;
+                
+                Get.dialog(
+                  KomplainDialog(
+                    transaksiId: data['id'] ?? 0,
+                    transaksiNoInvoice: data['no_invoice'] ?? '-',
+                    produkNama: item?['nama'] ?? widget.pelatihan.nama,
+                  ),
+                  barrierDismissible: false,
+                );
+              },
+              icon: const Icon(Icons.report_problem_outlined, color: Colors.white),
+              label: Text(
+                'Komplain',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              minimumSize: const Size(double.infinity, 48),
-            ),
-            child: Text(
-              'Lihat Pesanan Saya',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                minimumSize: const Size(double.infinity, 48),
               ),
             ),
-          ),
         ],
       ),
     );
   }
   
-  void _showCancelDialog(BuildContext context, TransaksiController controller, String noInvoice) {
+  void _showCancelDialog(BuildContext context, String noInvoice) {
     Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -790,7 +1166,8 @@ class PembayaranScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               Get.back();
-              await controller.batalkanPesanan(noInvoice);
+              await _controller.batalkanPesanan(noInvoice);
+              _controller.getInvoice(widget.idTransaksi);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

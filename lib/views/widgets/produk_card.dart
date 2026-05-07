@@ -202,12 +202,14 @@ class ProdukCard extends StatelessWidget {
                           Icon(
                             Icons.business_outlined,
                             size: 10,
+                            color: Colors.grey[500],
                           ),
                           const SizedBox(width: 3),
                           Expanded(
                             child: Text(
                               _mitra?.nama ?? 'Belum ada nama',
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
                                 fontSize: 9,
                               ),
                               maxLines: 1,
@@ -224,12 +226,14 @@ class ProdukCard extends StatelessWidget {
                           Icon(
                             Icons.person_outline,
                             size: 10,
+                            color: Colors.grey[500],
                           ),
                           const SizedBox(width: 3),
                           Expanded(
                             child: Text(
                               _penulis!,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
                                 fontSize: 9,
                               ),
                               maxLines: 1,
@@ -247,6 +251,7 @@ class ProdukCard extends StatelessWidget {
                         Icon(
                           isPelatihan ? Icons.calendar_today : Icons.description_outlined,
                           size: 10,
+                          color: Colors.grey[500],
                         ),
                         const SizedBox(width: 3),
                         Expanded(
@@ -255,6 +260,7 @@ class ProdukCard extends StatelessWidget {
                                 ? (_waktu ?? '-')
                                 : (_jumlahHalaman != null ? '${_jumlahHalaman} halaman' : '-'),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
                               fontSize: 9,
                             ),
                             maxLines: 1,
@@ -281,6 +287,7 @@ class ProdukCard extends StatelessWidget {
                                   Formatter.formatCurrency(_harga),
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     decoration: TextDecoration.lineThrough,
+                                    color: Colors.grey[400],
                                     fontSize: 9,
                                   ),
                                 ),
@@ -298,7 +305,7 @@ class ProdukCard extends StatelessWidget {
                           ),
                         ),
                         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [primary, primary.withValues(alpha: 0.8)],

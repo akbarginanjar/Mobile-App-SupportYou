@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/models/transaksi_model.dart';
+import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
 import 'package:mobile_supportyou/views/pembayaran/screen.dart';
 
@@ -26,6 +27,35 @@ class TransaksiCard extends StatelessWidget {
     }
   }
 
+  // Method untuk membuat Pelatihan dari data transaksi
+  Pelatihan _createPelatihanFromTransaksi() {
+    final item = transaksi.item.isNotEmpty ? transaksi.item[0] : null;
+    
+    return Pelatihan(
+      id: item?.pelatihanId ?? 0,
+      nama: item?.nama ?? 'Pelatihan',
+      slug: '',
+      deskripsi: null,
+      harga: item?.harga ?? 0,
+      hargaFinal: item?.harga,
+      tempat: null,
+      waktu: transaksi.waktuTransaksi,
+      cover: null,
+      type: transaksi.transactionType == 'pelatihan' ? 'pelatihan' : 'ebook',
+      typePelatihan: null,
+      maxPeserta: null,
+      mitra: null,
+      sections: [],
+      testimonials: [],
+      speaker: null,
+      penulis: null,
+      penerbit: null,
+      tahunTerbit: null,
+      jumlahHalaman: null,
+      isbn: null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor();
@@ -38,9 +68,11 @@ class TransaksiCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
+          final pelatihan = _createPelatihanFromTransaksi();
           Get.to(
             () => PembayaranScreen(
               idTransaksi: transaksi.id,
+              pelatihan: pelatihan,
             ),
           );
         },
@@ -57,7 +89,7 @@ class TransaksiCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  transaksi.status, // Langsung dari API
+                  transaksi.status,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: statusColor,
@@ -87,8 +119,7 @@ class TransaksiCard extends StatelessWidget {
                       children: [
                         Text(
                           "Tanggal Transaksi",
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -104,8 +135,7 @@ class TransaksiCard extends StatelessWidget {
                       children: [
                         Text(
                           "Nominal",
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -138,8 +168,7 @@ class TransaksiCard extends StatelessWidget {
                         children: [
                           Text(
                             "Produk",
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                           const SizedBox(height: 4),
                           Text(

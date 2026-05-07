@@ -1,3 +1,4 @@
+// lib/models/pelatihan_model.dart
 class Pelatihan {
   final int id;
   final String nama;
@@ -15,6 +16,7 @@ class Pelatihan {
   final List<Section> sections;
   final List<Testimonial> testimonials;
   final Speaker? speaker;
+  final int? tokoMemberId; // 🔥 Tambahkan ini untuk toko_member_id
 
   // Field khusus Ebook
   final String? penulis;
@@ -40,6 +42,7 @@ class Pelatihan {
     this.sections = const [],
     this.testimonials = const [],
     this.speaker,
+    this.tokoMemberId, // 🔥 Tambahkan
     this.penulis,
     this.penerbit,
     this.tahunTerbit,
@@ -48,6 +51,12 @@ class Pelatihan {
   });
 
   factory Pelatihan.fromJson(Map<String, dynamic> json) {
+    // 🔥 Ambil tokoMemberId dari mitra jika ada
+    int? tokoMemberId;
+    if (json['mitra'] != null) {
+      tokoMemberId = json['mitra']['member_id'] ?? json['mitra']['id'];
+    }
+    
     return Pelatihan(
       id: json['id'],
       nama: json['nama'] ?? '',
@@ -61,19 +70,15 @@ class Pelatihan {
       type: json['type'] ?? 'pelatihan',
       typePelatihan: json['type_pelatihan'],
       maxPeserta: json['max_peserta'],
-      // Mapping Object Mitra
       mitra: json['mitra'] != null ? Mitra.fromJson(json['mitra']) : null,
-      // Mapping List Sections
       sections: (json['sections'] as List?)
               ?.map((e) => Section.fromJson(e))
               .toList() ?? [],
-      // Mapping List Testimonials
       testimonials: (json['testimonials'] as List?)
               ?.map((e) => Testimonial.fromJson(e))
               .toList() ?? [],
-      // Mapping Object Speaker
       speaker: json['speakers'] != null ? Speaker.fromJson(json['speakers']) : null,
-      // Field Ebook
+      tokoMemberId: tokoMemberId, // 🔥 Set nilai tokoMemberId
       penulis: json['penulis'],
       penerbit: json['penerbit'],
       tahunTerbit: json['tahun_terbit'],
@@ -86,13 +91,19 @@ class Pelatihan {
 class Mitra {
   final int id;
   final String nama;
-
-  Mitra({required this.id, required this.nama});
+  final int? memberId; // 🔥 Tambahkan memberId untuk toko_member_id
+  
+  Mitra({
+    required this.id, 
+    required this.nama,
+    this.memberId,
+  });
 
   factory Mitra.fromJson(Map<String, dynamic> json) {
     return Mitra(
       id: json['id'],
       nama: json['nama_lengkap'] ?? json['nama'] ?? '-',
+      memberId: json['member_id'] ?? json['id'], // 🔥 Ambil member_id
     );
   }
 }

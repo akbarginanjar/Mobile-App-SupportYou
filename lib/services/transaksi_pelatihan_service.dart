@@ -32,7 +32,7 @@ class TransaksiPelatihanService extends GetConnect {
     final headers = {
       'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
       'author': 'bearer $tokens',  // Perhatikan: 'author' bukan 'Authorization'
-      'device': 'web',
+      'device': 'mobile',
     };
     
     print('Headers: $headers');

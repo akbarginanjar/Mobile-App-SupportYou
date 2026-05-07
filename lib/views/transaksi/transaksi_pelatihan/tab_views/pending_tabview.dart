@@ -5,16 +5,24 @@ import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/transaksi_pelatihan_controller.dart';
 import 'package:mobile_supportyou/views/transaksi/transaksi_pelatihan/card/screen.dart';
 
-class PendingTabView extends StatelessWidget {
+class PendingTabView extends StatefulWidget {
   const PendingTabView({super.key});
 
   @override
+  State<PendingTabView> createState() => _PendingTabViewState();
+}
+
+class _PendingTabViewState extends State<PendingTabView> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
-    // Gunakan Get.find, bukan Get.put (karena sudah diinisialisasi di screen.dart)
+    super.build(context);
+    
     final TransaksiPelatihanController controller = Get.find<TransaksiPelatihanController>();
     
     return Obx(() {
-      // Loading state
       if (controller.isLoadingPending.value && controller.transaksiPending.isEmpty) {
         return const Center(
           child: Column(
@@ -28,7 +36,6 @@ class PendingTabView extends StatelessWidget {
         );
       }
       
-      // Error state
       if (controller.errorPending.value.isNotEmpty) {
         return Center(
           child: Column(
@@ -36,13 +43,13 @@ class PendingTabView extends StatelessWidget {
             children: [
               Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Gagal memuat transaksi',
               ),
               const SizedBox(height: 8),
               Text(
                 controller.errorPending.value,
-                style: TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 12),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -54,14 +61,13 @@ class PendingTabView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text('Coba Lagi', style: TextStyle(color: textTheme),),
+                child: const Text('Coba Lagi', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
         );
       }
       
-      // Empty state
       if (controller.transaksiPending.isEmpty) {
         return Center(
           child: Column(
@@ -69,7 +75,7 @@ class PendingTabView extends StatelessWidget {
             children: [
               Icon(Icons.hourglass_empty, size: 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 "Tidak ada transaksi pending",
               ),
             ],
@@ -77,7 +83,6 @@ class PendingTabView extends StatelessWidget {
         );
       }
       
-      // Data state
       return RefreshIndicator(
         onRefresh: () => controller.loadPending(),
         child: ListView.builder(
@@ -92,4 +97,4 @@ class PendingTabView extends StatelessWidget {
       );
     });
   }
-} 
+}

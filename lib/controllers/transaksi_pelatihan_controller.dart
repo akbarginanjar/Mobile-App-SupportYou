@@ -93,6 +93,22 @@ class TransaksiPelatihanController extends GetxController {
     loadDibatalkan();
   }
   
+  void refreshPending() {
+    loadPending();
+  }
+  
+  void refreshExpired() {
+    loadExpired();
+  }
+  
+  void refreshSelesai() {
+    loadSelesai();
+  }
+  
+  void refreshDibatalkan() {
+    loadDibatalkan();
+  }
+  
   @override
   void onInit() {
     super.onInit();

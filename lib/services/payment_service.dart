@@ -44,7 +44,7 @@ class PaymentService extends GetConnect {
     };
     
     if (token != null && token.isNotEmpty) {
-      headers['author'] = 'bearer $token';
+      headers['author'] = 'Bearer $token';
     }
     
     return headers;
@@ -113,7 +113,7 @@ class PaymentService extends GetConnect {
   // ==================== POST REQUESTS ====================
   
   // 🔹 Buat checkout / pesanan
-  Future<dynamic> createCheckout(Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>?> createCheckout(Map<String, dynamic> data) async {
     try {
       final response = await post(
         '${Base.url}v1/checkout',
@@ -126,11 +126,17 @@ class PaymentService extends GetConnect {
       print('Body: ${response.body}');
       
       if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.body is Map) {
+          return response.body;
+        } else if (response.body is String) {
+          return json.decode(response.body);
+        }
         return response.body;
       } else {
         throw Exception('Failed to create checkout: ${response.statusCode}');
       }
     } catch (e) {
+      print('❌ CreateCheckout error: $e');
       rethrow;
     }
   }
@@ -138,13 +144,44 @@ class PaymentService extends GetConnect {
   // 🔹 Batalkan pesanan
   Future<dynamic> batalkanPesanan(String noInvoice) async {
     try {
-      final response = await post(
-        '${Base.url}v1/batalkan-pesanan',
-        {'no_invoice': noInvoice},
-        headers: _getHeaders(),
-      );
-      return response.body;
+      final token = _getToken();
+      
+      final uri = Uri.parse('${Base.url}v1/transaksi-online/cancel');
+      
+      final request = http.MultipartRequest('POST', uri);
+      
+      request.headers.addAll({
+        'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
+        'author': 'Bearer $token',
+        'device': 'mobile',
+      });
+      
+      request.fields['no_invoice'] = noInvoice;
+      
+      print('📥 Batalkan Pesanan Request:');
+      print('URL: $uri');
+      print('Headers: ${request.headers}');
+      print('Fields: ${request.fields}');
+      
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      print('📥 Batalkan Pesanan Response Status: ${response.statusCode}');
+      print('📥 Batalkan Pesanan Response Body: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        try {
+          return json.decode(response.body);
+        } catch (e) {
+          print('Response body is not JSON, returning empty map');
+          return {'status': true, 'message': 'Pesanan berhasil dibatalkan'};
+        }
+      } else {
+        throw Exception('Failed to cancel order: ${response.statusCode}');
+      }
+      
     } catch (e) {
+      print('❌ Error in batalkanPesanan: $e');
       rethrow;
     }
   }

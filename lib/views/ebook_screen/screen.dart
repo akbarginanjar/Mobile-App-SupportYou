@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/ebook_controller.dart';
+import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/utils/image_helper.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
+import 'package:mobile_supportyou/views/checkout_screen/screen.dart';
 
 class EbookScreen extends StatefulWidget {
   final String slug;
@@ -488,28 +490,81 @@ class _EbookScreenState extends State<EbookScreen> {
           ],
         ),
         child: SafeArea(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          child: Obx(() {
+            // Cek apakah ebook sedang dimuat atau null
+            if (controller.isLoadingDetail.value || controller.detailEbook.value == null) {
+              return ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: null,
+                child: Text(
+                  'Memuat...',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              );
+            }
+            
+            final ebook = controller.detailEbook.value!;
+            
+            // Konversi Ebook ke Pelatihan untuk checkout
+            final pelatihan = Pelatihan(
+              id: ebook.id,
+              nama: ebook.nama,
+              slug: ebook.slug,
+              deskripsi: ebook.deskripsi,
+              harga: ebook.harga ?? 0,
+              hargaFinal: null,
+              tempat: null,
+              waktu: null,
+              cover: ebook.cover,
+              type: 'ebook',
+              typePelatihan: null,
+              maxPeserta: null,
+              mitra: null,
+              sections: [],
+              testimonials: [],
+              speaker: null,
+              penulis: ebook.penulis,
+              penerbit: ebook.penerbit,
+              tahunTerbit: ebook.tahunTerbit,
+              jumlahHalaman: ebook.jumlahHalaman,
+              isbn: ebook.isbn,
+            );
+            
+            return ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
               ),
-              elevation: 0,
-            ),
-            onPressed: () {
-              // TODO: aksi beli sekarang
-            },
-            child: Text(
-              'Beli Sekarang',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+              onPressed: () {
+                Get.to(() => CheckoutScreen(pelatihan: pelatihan));
+              },
+              child: Text(
+                'Beli Sekarang',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ),
+            );
+          }),
         ),
       ),
     );

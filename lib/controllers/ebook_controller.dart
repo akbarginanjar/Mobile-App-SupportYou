@@ -1,114 +1,138 @@
+// lib/controllers/ebook_controller.dart
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/models/ebook_model.dart';
 import 'package:mobile_supportyou/services/ebook_service.dart';
 
 class EbookController extends GetxController {
-  final EbookService _service = EbookService();
-
-  // 🔹 Home
-  var ebookListHome = <Ebook>[].obs;
-  var isLoadingHome = false.obs;
-  int lengthHome = 10;
-  int startHome = 0;
-
-  // 🔹 Semua e-book
-  var ebookListAll = <Ebook>[].obs;
-  var isLoadingAll = false.obs;
-  var isMoreLoadingAll = false.obs;
-  int lengthAll = 5;
-  int startAll = 0;
-  bool hasMoreAll = true;
-
-  // 🔹 Detail e-book
-  var detailEbook = Rxn<Ebook>();
-  var isLoadingDetail = false.obs;
-
-  @override
-  void onInit() {
-    super.onInit();
-    loadEbookHome();
-  }
-
-  /// 🔹 Home: hanya load 10 item
+  final EbookService _ebookService = EbookService();
+  
+  // Untuk Home
+  final isLoadingHome = true.obs;
+  final ebookListHome = <Ebook>[].obs;
+  
+  // Untuk Semua Ebook
+  final isLoadingAll = true.obs;
+  final isMoreLoadingAll = false.obs;
+  final ebookListAll = <Ebook>[].obs;
+  var currentStartAll = 0;
+  var hasMoreDataAll = true;
+  
+  // Untuk Detail
+  final isLoadingDetail = true.obs;
+  final detailEbook = Rx<Ebook?>(null);
+  
+  // Untuk Search
+  final isSearching = false.obs;
+  final searchResult = <Ebook>[].obs;
+  
+  // ==================== HOME ====================
   Future<void> loadEbookHome() async {
-    isLoadingHome.value = true;
-    startHome = 0;
     try {
-      final result = await _service.getEbook(start: startHome, length: lengthHome);
+      isLoadingHome.value = true;
+      final result = await _ebookService.getEbook(start: 0, length: 10);
       ebookListHome.assignAll(result);
     } catch (e) {
-      print("Error loadEbookHome: $e");
+      print('Error loading home ebook: $e');
     } finally {
       isLoadingHome.value = false;
     }
   }
-
-  /// 🔹 Semua e-book: initial load
-  Future<void> loadEbookAll() async {
-    isLoadingAll.value = true;
-    startAll = 0;
-    try {
-      final result = await _service.getEbook(start: startAll, length: lengthAll);
-      ebookListAll.assignAll(result);
-      hasMoreAll = result.length == lengthAll;
-    } catch (e) {
-      print("Error loadEbookAll: $e");
-    } finally {
-      isLoadingAll.value = false;
+  
+  // ==================== SEMUA EBOOK ====================
+  Future<void> loadEbookAll({bool reset = true}) async {
+    if (reset) {
+      currentStartAll = 0;
+      hasMoreDataAll = true;
+      ebookListAll.clear();
+      isLoadingAll.value = true;
     }
-  }
-
-  /// 🔹 Semua e-book: lazy load
-  Future<void> loadMoreEbookAll() async {
-    if (isMoreLoadingAll.value || !hasMoreAll) return;
-    isMoreLoadingAll.value = true;
-    startAll += lengthAll;
+    
     try {
-      final result = await _service.getEbook(start: startAll, length: lengthAll);
+      final result = await _ebookService.getEbook(
+        start: currentStartAll,
+        length: 10,
+      );
+      
       if (result.isEmpty) {
-        hasMoreAll = false;
+        hasMoreDataAll = false;
       } else {
-        ebookListAll.addAll(result);
+        if (reset) {
+          ebookListAll.assignAll(result);
+        } else {
+          ebookListAll.addAll(result);
+        }
+        currentStartAll += result.length;
+        hasMoreDataAll = result.length >= 10;
       }
     } catch (e) {
-      print("Error loadMoreEbookAll: $e");
+      print('Error loading all ebook: $e');
     } finally {
+      if (reset) {
+        isLoadingAll.value = false;
+      }
+    }
+  }
+  
+  Future<void> loadMoreEbookAll() async {
+    if (!isMoreLoadingAll.value && hasMoreDataAll) {
+      isMoreLoadingAll.value = true;
+      await loadEbookAll(reset: false);
       isMoreLoadingAll.value = false;
     }
   }
-
-  /// 🔹 Semua e-book: pencarian
-  Future<void> searchEbookAll(String query) async {
-    isLoadingAll.value = true;
-    startAll = 0;
+  
+  // ==================== DETAIL ====================
+  Future<void> loadDetailEbook(String slug) async {
     try {
-      final result = await _service.searchEbook(query, start: startAll, length: lengthAll);
-      ebookListAll.assignAll(result);
-      hasMoreAll = result.length == lengthAll;
+      isLoadingDetail.value = true;
+      final result = await _ebookService.getDetailEbook(slug);
+      detailEbook.value = result;
     } catch (e) {
-      print("Error searchEbookAll: $e");
+      print('Error loading detail ebook: $e');
+      detailEbook.value = null;
     } finally {
-      isLoadingAll.value = false;
+      isLoadingDetail.value = false;
     }
   }
-
-  /// 🔹 Refresh semua e-book
+  
+  // ==================== SEARCH ====================
+  Future<void> searchEbookAll(String query) async {
+    if (query.isEmpty) {
+      isSearching.value = false;
+      searchResult.clear();
+      return;
+    }
+    
+    try {
+      isSearching.value = true;
+      final result = await _ebookService.searchEbook(query);
+      searchResult.assignAll(result);
+    } catch (e) {
+      print('Error searching ebook: $e');
+      searchResult.clear();
+    } finally {
+      isSearching.value = false;
+    }
+  }
+  
+  void clearSearch() {
+    searchResult.clear();
+    isSearching.value = false;
+  }
+  
+  // ==================== REFRESH ====================
   Future<void> refreshAll() async {
-    ebookListAll.clear();
+    await Future.wait([
+      loadEbookHome(),
+      loadEbookAll(),
+    ]);
+  }
+  
+  Future<void> refreshHome() async {
+    await loadEbookHome();
+  }
+  
+  Future<void> refreshAllEbook() async {
     await loadEbookAll();
   }
-
-Future<void> loadDetailEbook(String id) async {
-  isLoadingDetail.value = true;
-  try {
-    final result = await _service.getDetailEbook(id);
-    detailEbook.value = result;
-  } catch (e) {
-    print("Error loadDetailEbook: $e");
-    detailEbook.value = null;
-  } finally {
-    isLoadingDetail.value = false;
-  }
-}
-
 }

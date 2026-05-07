@@ -73,7 +73,7 @@ class Discount {
   
   int calculateDiscount(int price) {
     if (type == 'percentage') {
-      return (price * value / 100).round();
+      return (price * value / 100).floor();
     } else {
       return value; // nominal
     }

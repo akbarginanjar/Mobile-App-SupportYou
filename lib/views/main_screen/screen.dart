@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/main_controller.dart';
 import 'package:mobile_supportyou/views/home_screen/screen.dart';
+import 'package:mobile_supportyou/views/profil_screen/screen.dart';
 import 'package:mobile_supportyou/views/transaksi/screen.dart';
 
 import 'package:get_storage/get_storage.dart';
@@ -20,19 +21,20 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const PilihTransaksiScreen(),
     const Center(child: Text("Halaman Keranjang")),
-        Center(
-      child: SizedBox(
-        width: 200,
-        child: ElevatedButton(
-          onPressed: () {
-            final box = GetStorage();
-            box.erase(); // hapus semua data login
-            Get.offAll(() => LoginNoHpScreen()); // arahkan ke login
-          },
-          child: const Text("Logout"),
-        ),
-      ),
-    ),
+    const ProfilScreen(),
+    //     Center(
+    //   child: SizedBox(
+    //     width: 200,
+    //     child: ElevatedButton(
+    //       onPressed: () {
+    //         final box = GetStorage();
+    //         box.erase(); // hapus semua data login
+    //         Get.offAll(() => LoginNoHpScreen()); // arahkan ke login
+    //       },
+    //       child: const Text("Logout"),
+    //     ),
+    //   ),
+    // ),
 
   ];
 

@@ -1,15 +1,25 @@
-// lib/views/transaksi/transaksi_pelatihan/tab_views/selesai_tabview.dart
+// lib/views/transaksi/transaksi_pelatihan/tab_views/pending_tabview.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/transaksi_pelatihan_controller.dart';
 import 'package:mobile_supportyou/views/transaksi/transaksi_pelatihan/card/screen.dart';
 
-class SelesaiTabView extends StatelessWidget {
+class SelesaiTabView extends StatefulWidget {
   const SelesaiTabView({super.key});
 
   @override
+  State<SelesaiTabView> createState() => _SelesaiTabViewState();
+}
+
+class _SelesaiTabViewState extends State<SelesaiTabView> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
+    
     final TransaksiPelatihanController controller = Get.find<TransaksiPelatihanController>();
     
     return Obx(() {
@@ -33,13 +43,13 @@ class SelesaiTabView extends StatelessWidget {
             children: [
               Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Gagal memuat transaksi',
               ),
               const SizedBox(height: 8),
               Text(
                 controller.errorSelesai.value,
-                style: TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 12),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -51,7 +61,7 @@ class SelesaiTabView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text('Coba Lagi', style: TextStyle(color: textTheme),),
+                child: const Text('Coba Lagi', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -63,9 +73,9 @@ class SelesaiTabView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.check_circle_outline, size: 64, color: Colors.grey[400]),
+              Icon(Icons.hourglass_empty, size: 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 "Tidak ada transaksi selesai",
               ),
             ],

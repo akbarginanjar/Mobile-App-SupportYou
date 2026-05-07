@@ -49,7 +49,7 @@ class VoucherScreen extends StatelessWidget {
                 ),
               ],
             ),
-            child: RadioListTile<Discount?>(
+            child: RadioListTile<String?>(
               title: const Text(
                 'Tidak menggunakan voucher',
                 style: TextStyle(fontWeight: FontWeight.w500),
@@ -58,10 +58,10 @@ class VoucherScreen extends StatelessWidget {
                 'Kembali ke harga normal',
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
-              value: null,
-              groupValue: selectedDiscount,
+              value: 'none',
+              groupValue: selectedDiscount != null ? 'selected' : 'none',
               onChanged: (value) {
-                Get.back(result: value);
+                Get.back(result: 'none');
               },
               activeColor: primary,
             ),

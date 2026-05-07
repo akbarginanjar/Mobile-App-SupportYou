@@ -127,7 +127,7 @@ class AuthService extends GetConnect {
     }
   }
 
-  /// Helper simpan session - DIPERBAIKI untuk menyimpan member_id
+  /// Helper simpan session - DIPERBAIKI
   void _saveSession(dynamic responseBody) {
     print('═══════════════════════════════════════════════════════════');
     print('💾 SAVING SESSION DATA');
@@ -143,14 +143,24 @@ class AuthService extends GetConnect {
     if (responseBody['data'] != null && responseBody['data'] is Map) {
       final userData = responseBody['data'];
       
+      // 🔥 AMBIL NAMA LENGKAP (prioritas dari karyawan)
+      String namaLengkap = userData['nama_lengkap'] ?? '';
+      
+      // Jika nama_lengkap kosong, ambil dari karyawan
+      if (namaLengkap.isEmpty && userData['karyawan'] != null) {
+        final karyawan = userData['karyawan'];
+        namaLengkap = karyawan['nama_lengkap'] ?? '';
+        print('📌 Nama lengkap dari karyawan: $namaLengkap');
+      }
+      
       // Simpan basic user info
       box.write('id', userData['id']);
-      box.write('no_hp', userData['no_hp']);
-      box.write('email', userData['email']);
-      box.write('nama_lengkap', userData['nama_lengkap']);
+      box.write('no_hp', userData['no_hp'] ?? '');
+      box.write('email', userData['email'] ?? '');
+      box.write('nama_lengkap', namaLengkap); // 🔥 PASTIKAN INI TERISI
+      box.write('username', userData['username'] ?? '');
       
-      // 🔥 PENTING: Simpan member_id (sesuai dengan project lain)
-      // Coba cari member_id di berbagai kemungkinan lokasi
+      // 🔥 PENTING: Simpan member_id
       int memberId = 0;
       
       // 1. Cek langsung di userData
@@ -158,17 +168,12 @@ class AuthService extends GetConnect {
         memberId = userData['member_id'];
         print('📌 Member ID found in userData: $memberId');
       }
-      // 2. Cek di dalam object karyawan (seperti project lain)
+      // 2. Cek di dalam object karyawan
       else if (userData['karyawan'] != null && userData['karyawan']['id'] != null) {
         memberId = userData['karyawan']['id'];
         print('📌 Member ID found in karyawan: $memberId');
       }
-      // 3. Cek di dalam object member
-      else if (userData['member'] != null && userData['member']['id'] != null) {
-        memberId = userData['member']['id'];
-        print('📌 Member ID found in member: $memberId');
-      }
-      // 4. Fallback ke user id
+      // 3. Fallback ke user id
       else {
         memberId = userData['id'];
         print('⚠️ No member_id found, using user ID as fallback: $memberId');
@@ -181,15 +186,11 @@ class AuthService extends GetConnect {
       box.write('user_data', userData);
     }
     
-    // Simpan default address jika ada
-    if (responseBody['default_address'] != null) {
-      box.write('default_address', responseBody['default_address']);
-      box.write('default_address_id', responseBody['default_address']['id']);
-      print('✅ Default address saved: ID ${responseBody['default_address']['id']}');
-    }
-    
     // Debug: Tampilkan semua keys yang tersimpan
     print('📋 All stored keys: ${box.getKeys()}');
+    print('📋 nama_lengkap value: ${box.read('nama_lengkap')}');
+    print('📋 email value: ${box.read('email')}');
+    print('📋 no_hp value: ${box.read('no_hp')}');
     print('📋 member_id value: ${box.read('member_id')}');
     print('═══════════════════════════════════════════════════════════');
   }

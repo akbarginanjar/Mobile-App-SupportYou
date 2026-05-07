@@ -42,11 +42,43 @@ class AuthController extends GetxController {
 
   /// --- SESSION HELPER ---
   void _saveSession(dynamic responseBody) {
-    box.write('tokens', responseBody['tokens']);
-    box.write('id', responseBody['data']['id']);
-    box.write('no_hp', responseBody['data']['no_hp']);
-    box.write('email', responseBody['data']['email']);
-    box.write('nama_lengkap', responseBody['data']['nama_lengkap']);
+    if (responseBody['tokens'] != null) {
+      box.write('tokens', responseBody['tokens']);
+    }
+    if (responseBody['data'] != null && responseBody['data'] is Map) {
+      final userData = responseBody['data'];
+      box.write('id', userData['id']);
+      box.write('no_hp', userData['no_hp'] ?? '');
+      box.write('email', userData['email'] ?? '');
+      box.write('nama_lengkap', userData['nama_lengkap'] ?? '');
+      box.write('member_id', userData['member_id'] ?? userData['id']);
+      box.write('user_data', userData);
+    } 
+    else if (responseBody['user'] != null && responseBody['user'] is Map) {
+      final userData = responseBody['user'];
+      box.write('id', userData['id']);
+      box.write('no_hp', userData['no_hp'] ?? userData['phone'] ?? '');
+      box.write('email', userData['email'] ?? '');
+      box.write('nama_lengkap', userData['nama_lengkap'] ?? userData['name'] ?? '');
+      box.write('member_id', userData['member_id'] ?? userData['id']);
+      box.write('user_data', userData);
+    }
+    else {
+      if (responseBody['id'] != null) {
+        box.write('id', responseBody['id']);
+        box.write('no_hp', responseBody['no_hp'] ?? '');
+        box.write('email', responseBody['email'] ?? '');
+        box.write('nama_lengkap', responseBody['nama_lengkap'] ?? '');
+        box.write('member_id', responseBody['member_id'] ?? responseBody['id']);
+      }
+    }
+    print('═══════════════════════════════════════════════════════════');
+    print('💾 SAVED USER DATA:');
+    print('nama_lengkap: ${box.read('nama_lengkap')}');
+    print('email: ${box.read('email')}');
+    print('no_hp: ${box.read('no_hp')}');
+    print('member_id: ${box.read('member_id')}');
+    print('═══════════════════════════════════════════════════════════');
   }
 
   /// --- REQUEST OTP ---
@@ -136,60 +168,60 @@ class AuthController extends GetxController {
     }
   }
 
-  /// --- REGISTER (NEW SESUAI PAYLOAD) ---
+    /// --- REGISTER ---
   Future<void> register() async {
-  isLoading.value = true;
+    isLoading.value = true;
 
-  final Map<String, dynamic> payload = {
-    "nama_lengkap": namaLengkapController.text,
-    "email": emailController.text,
-    "username": usernameController.text,
-    "no_hp": phoneController.text,
-    "provinsi_id": "",
-    "kab_kota_id": "",
-    "kecamatan_id": "",
-    "kelurahan_id": "",
-    "alamat": "",
-    "password": passwordController.text,
-    "konfirmasi_password": konfirmasiPasswordController.text,
-    "request_otp": 1,
-  };
+    final Map<String, dynamic> payload = {
+      "nama_lengkap": namaLengkapController.text,
+      "email": emailController.text,
+      "username": usernameController.text,
+      "no_hp": phoneController.text,
+      "provinsi_id": "",
+      "kab_kota_id": "",
+      "kecamatan_id": "",
+      "kelurahan_id": "",
+      "alamat": "",
+      "password": passwordController.text,
+      "konfirmasi_password": konfirmasiPasswordController.text,
+      "request_otp": 1,
+    };
 
-  try {
-    final response = await _authService.register(payload);
-    isLoading.value = false;
+    try {
+      final response = await _authService.register(payload);
+      isLoading.value = false;
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      EasyLoading.showSuccess('Registrasi Berhasil!');
-      Get.back();
-    } else {
-      final body = response.body;
-      if (body != null) {
-        if (body['errors'] != null) {
-          final errors = body['errors'];
-
-          // 🔹 cek email
-          if (errors['email'] != null && errors['email'] is List) {
-            EasyLoading.showError(errors['email'][0]);
-            return;
-          }
-          // 🔹 cek no_hp
-          if (errors['no_hp'] != null && errors['no_hp'] is List) {
-            EasyLoading.showError(errors['no_hp'][0]);
-            return;
-          }
-        }
-
-        // fallback ke message umum
-        EasyLoading.showError(body['message'] ?? 'Registrasi gagal');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // 🔥 SIMPAN DATA USER KE STORAGE
+        box.write('nama_lengkap', namaLengkapController.text);
+        box.write('email', emailController.text);
+        box.write('no_hp', phoneController.text);
+        box.write('username', usernameController.text);
+      
+        EasyLoading.showSuccess('Registrasi Berhasil! Silakan login');
+        Get.back(); // Kembali ke login screen
       } else {
-        EasyLoading.showError('Registrasi gagal');
+        final body = response.body;
+        if (body != null) {
+          if (body['errors'] != null) {
+            final errors = body['errors'];
+            if (errors['email'] != null && errors['email'] is List) {
+              EasyLoading.showError(errors['email'][0]);
+              return;
+            }
+            if (errors['no_hp'] != null && errors['no_hp'] is List) {
+              EasyLoading.showError(errors['no_hp'][0]);
+              return;
+            }
+          }
+          EasyLoading.showError(body['message'] ?? 'Registrasi gagal');
+        } else {
+          EasyLoading.showError('Registrasi gagal');
+        }
       }
+    } catch (e) {
+      isLoading.value = false;
+      debugPrint(e.toString());
     }
-  } catch (e) {
-    isLoading.value = false;
-    // EasyLoading.showError('Gagal menghubungi server');
-    debugPrint(e.toString());
   }
-}
 }

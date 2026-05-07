@@ -6,6 +6,7 @@ import 'package:mobile_supportyou/controllers/checkout_controller.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/utils/image_helper.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
+import 'package:mobile_supportyou/views/pembayaran/screen.dart';
 
 class CheckoutScreen extends StatelessWidget {
   final Pelatihan pelatihan;
@@ -17,10 +18,10 @@ class CheckoutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('═══════════════════════════════════════════════════════════');
-    print('📱 CheckoutScreen opened');
-    print('Pelatihan: ${pelatihan.nama}');
-    print('═══════════════════════════════════════════════════════════');
+    debugPrint('═══════════════════════════════════════════════════════════');
+    debugPrint('📱 CheckoutScreen opened');
+    debugPrint('Pelatihan: ${pelatihan.nama}');
+    debugPrint('═══════════════════════════════════════════════════════════');
     
     final controller = Get.put(CheckoutController(pelatihan: pelatihan));
     
@@ -49,7 +50,7 @@ class CheckoutScreen extends StatelessWidget {
                 SizedBox(height: 8),
                 Text(
                   'Mohon tunggu',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12),
                 ),
               ],
             ),
@@ -95,11 +96,9 @@ class CheckoutScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header dengan gambar dan info utama
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Product Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: SizedBox(
@@ -129,12 +128,10 @@ class CheckoutScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              // Product Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Type Badge
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
@@ -168,7 +165,6 @@ class CheckoutScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Nama Pelatihan
                     Text(
                       pelatihan.nama,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -179,7 +175,6 @@ class CheckoutScreen extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
-                    // Harga
                     Text(
                       Formatter.formatCurrency(pelatihan.hargaFinal ?? pelatihan.harga),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -196,7 +191,6 @@ class CheckoutScreen extends StatelessWidget {
           
           const Divider(height: 24),
           
-          // Detail Informasi Pelatihan
           Row(
             children: [
               Expanded(
@@ -225,7 +219,6 @@ class CheckoutScreen extends StatelessWidget {
           
           const SizedBox(height: 12),
           
-          // Tempat / Platform
           if (pelatihan.typePelatihan == "offline") ...[
             _buildDetailItem(
               context,
@@ -246,7 +239,6 @@ class CheckoutScreen extends StatelessWidget {
           
           const SizedBox(height: 12),
           
-          // Penyelenggara
           _buildDetailItem(
             context,
             icon: Icons.business_outlined,
@@ -286,7 +278,6 @@ class CheckoutScreen extends StatelessWidget {
                   label,
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.grey[600],
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -321,7 +312,6 @@ class CheckoutScreen extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 10,
-              color: Colors.grey[600],
             ),
           ),
           const SizedBox(height: 2),
@@ -389,14 +379,14 @@ class CheckoutScreen extends StatelessWidget {
                     controller.getSelectedPaymentMethodName(),
                     style: TextStyle(
                       color: controller.selectedPaymentMethod.value == null 
-                          ? Colors.grey[500] 
+                          ? textTheme
                           : Colors.black87,
                       fontWeight: controller.selectedPaymentMethod.value == null 
                           ? FontWeight.normal 
                           : FontWeight.w500,
                     ),
                   )),
-                  Icon(Icons.chevron_right, color: Colors.grey[400]),
+                  Icon(Icons.chevron_right),
                 ],
               ),
             ),
@@ -451,7 +441,7 @@ class CheckoutScreen extends StatelessWidget {
                       controller.getSelectedDiscountText(),
                       style: TextStyle(
                         color: controller.selectedDiscount.value == null 
-                            ? Colors.grey[500] 
+                            ? textTheme
                             : Colors.green[700],
                         fontWeight: controller.selectedDiscount.value == null 
                             ? FontWeight.normal 
@@ -459,7 +449,7 @@ class CheckoutScreen extends StatelessWidget {
                       ),
                     ),
                   )),
-                  Icon(Icons.chevron_right, color: Colors.grey[400]),
+                  Icon(Icons.chevron_right),
                 ],
               ),
             ),
@@ -495,6 +485,9 @@ class CheckoutScreen extends StatelessWidget {
   }
   
   Widget _buildOrderSummary(BuildContext context, CheckoutController controller) {
+    final basePrice = controller.pelatihan.hargaFinal ?? controller.pelatihan.harga;
+    final priceAfterDiscount = basePrice - controller.discountAmount.value;
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -520,8 +513,8 @@ class CheckoutScreen extends StatelessWidget {
           
           _buildSummaryRow(
             context,
-            'Total Harga (1 Pelatihan)',
-            Formatter.formatCurrency(controller.pelatihan.hargaFinal ?? controller.pelatihan.harga),
+            'Harga Pelatihan',
+            Formatter.formatCurrency(basePrice),
           ),
           const SizedBox(height: 12),
           
@@ -538,16 +531,18 @@ class CheckoutScreen extends StatelessWidget {
             Formatter.formatCurrency(controller.appFee.value),
           ),
           
+          const SizedBox(height: 12),
+          
           Obx(() => controller.discountAmount.value > 0
               ? Column(
                   children: [
-                    const SizedBox(height: 12),
                     _buildSummaryRow(
                       context,
                       'Diskon (${controller.selectedDiscount.value?.name ?? ''})',
                       '- ${Formatter.formatCurrency(controller.discountAmount.value)}',
                       isDiscount: true,
                     ),
+                    const SizedBox(height: 8),
                   ],
                 )
               : const SizedBox.shrink()),
@@ -578,7 +573,7 @@ class CheckoutScreen extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: isTotal ? Colors.black87 : Colors.grey[600],
+            color: isTotal ? Colors.black87 : (isDiscount ? Colors.red : textTheme),
             fontWeight: isTotal ? FontWeight.w600 : FontWeight.w400,
             fontSize: isTotal ? 14 : 13,
           ),
@@ -586,7 +581,7 @@ class CheckoutScreen extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            color: isDiscount ? Colors.red : (isTotal ? primary : Colors.grey[700]),
+            color: isDiscount ? Colors.red : (isTotal ? primary : textTheme),
             fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
             fontSize: isTotal ? 16 : 13,
           ),
@@ -612,7 +607,7 @@ class CheckoutScreen extends StatelessWidget {
         child: Obx(() => ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: primary,
-            foregroundColor: Colors.white,
+            foregroundColor: theme,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
