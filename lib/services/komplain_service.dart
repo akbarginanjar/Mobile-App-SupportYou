@@ -1,3 +1,4 @@
+// lib/services/komplain_service.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -92,5 +93,64 @@ class KomplainService extends GetConnect {
   
   void clearRefundStatus(int transaksiId) {
     _storage.remove('refund_status_$transaksiId');
+  }
+  
+  // 🔥 METHOD BARU: Ambil data refund dari API untuk transaksi tertentu
+  Future<Map<String, dynamic>?> getRefundFromApi(int transaksiId) async {
+    final url = '${Base.url}v1/refund-transaksi?transaksi_id=$transaksiId';
+    final token = _getToken();
+    
+    if (token == null) {
+      debugPrint('❌ Token not found');
+      return null;
+    }
+    
+    debugPrint('📤 GET REFUND');
+    debugPrint('URL: $url');
+    
+    try {
+      final response = await get(url, headers: _getHeaders());
+      
+      debugPrint('📥 Response Status: ${response.statusCode}');
+      debugPrint('📥 Response Body: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        if (response.body is Map) {
+          return response.body;
+        } else if (response.body is String) {
+          return json.decode(response.body);
+        }
+        return response.body;
+      } else {
+        debugPrint('❌ Get refund failed: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('❌ Network Error: $e');
+      return null;
+    }
+  }
+  
+  // 🔥 METHOD BARU: Sinkronkan status refund dari API ke local storage
+  Future<void> syncRefundStatus(int transaksiId) async {
+    try {
+      final refundData = await getRefundFromApi(transaksiId);
+      
+      if (refundData != null) {
+        final refunds = refundData['data'] ?? [];
+        if (refunds is List && refunds.isNotEmpty) {
+          final refund = refunds.first;
+          final status = refund['status'];
+          
+          // Jika status refund adalah pending/processing, simpan ke local storage
+          if (status == 'pending' || status == 'processing' || status == 'submitted') {
+            saveRefundStatus(transaksiId);
+            debugPrint('✅ Refund status synced from API: $status for transaksi $transaksiId');
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error syncing refund status: $e');
+    }
   }
 }

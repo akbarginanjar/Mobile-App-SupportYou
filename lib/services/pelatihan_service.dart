@@ -4,10 +4,10 @@ import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/utils/base.dart';
 
 class PelatihanService extends GetConnect {
-  // 🔹 Ambil list pelatihan untuk home (limit 10)
+  // 🔹 Ambil list pelatihan untuk home (limit 6)
   Future<List<Pelatihan>> getPelatihanHome() async {
     final response = await get(
-      '${Base.url}/v1/pelatihan?start=0&length=10&type=pelatihan',
+      '${Base.url}/v1/pelatihan?is_published=1&start=0&length=6&type=pelatihan',
       headers: {
         'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
         'device': 'mobile',
@@ -26,7 +26,7 @@ class PelatihanService extends GetConnect {
   // 🔹 Ambil list pelatihan untuk halaman semua pelatihan (dengan pagination)
   Future<List<Pelatihan>> getPelatihanAll({int start = 0, int length = 10}) async {
     final response = await get(
-      '${Base.url}/v1/pelatihan?start=$start&length=$length&type=pelatihan',
+      '${Base.url}/v1/pelatihan?is_published=1&start=$start&length=$length&type=pelatihan',
       headers: {
         'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
         'device': 'mobile',
@@ -63,7 +63,7 @@ class PelatihanService extends GetConnect {
   // 🔹 Search pelatihan
   Future<List<Pelatihan>> searchPelatihan(String query, {int start = 0, int length = 10}) async {
     final response = await get(
-      '${Base.url}/v1/pelatihan?search=$query&start=$start&length=$length&type=pelatihan',
+      '${Base.url}/v1/pelatihan?is_published=1&search=$query&start=$start&length=$length&type=pelatihan',
       headers: {
         'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
         'device': 'mobile',
@@ -82,7 +82,7 @@ class PelatihanService extends GetConnect {
   // 🔹 Ambil pelatihan berdasarkan kategori
   Future<List<Pelatihan>> getPelatihanByKategori(int kategoriId) async {
     final response = await get(
-      '${Base.url}/v1/pelatihan?kategori_id=$kategoriId&type=pelatihan',
+      '${Base.url}/v1/pelatihan?is_published=1&kategori_id=$kategoriId&type=pelatihan',
       headers: {
         'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
         'device': 'mobile',
