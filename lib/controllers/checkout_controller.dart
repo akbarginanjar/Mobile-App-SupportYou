@@ -440,7 +440,7 @@ class CheckoutController extends GetxController {
           duration: const Duration(seconds: 2),
         );
         
-        Get.offAll(() => PembayaranScreen(
+        Get.to(() => PembayaranScreen(
               idTransaksi: response['id'],
               pelatihan: pelatihan,
               discountAmount: discountAmount.value.toDouble(),

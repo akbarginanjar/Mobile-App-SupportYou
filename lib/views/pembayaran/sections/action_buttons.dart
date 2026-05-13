@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
+import 'package:mobile_supportyou/controllers/main_controller.dart';
 import 'package:mobile_supportyou/views/main_screen/screen.dart';
 import 'package:mobile_supportyou/views/pembayaran/widgets/komplain_dialog.dart';
 
@@ -83,6 +84,40 @@ class ActionButtons extends StatelessWidget {
                 ),
               ],
             ),
+
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: () {
+              if (Get.isRegistered<MainController>()) {
+                Get.find<MainController>().changeIndex(1);
+                Get.offAll(() => const MainScreen());
+              } else {
+                Get.put(MainController());
+                Get.offAll(() => const MainScreen());
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  if (Get.isRegistered<MainController>()) {
+                    Get.find<MainController>().changeIndex(1);
+                  }
+                });
+              }
+            },
+            icon: const Icon(Icons.history, color: Colors.white),
+            label: Text(
+              'Lihat Pesanan Lain',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              minimumSize: const Size(double.infinity, 48),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
         ],
       ),
     );

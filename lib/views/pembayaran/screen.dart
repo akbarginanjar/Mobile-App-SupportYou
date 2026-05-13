@@ -91,6 +91,13 @@ class _PembayaranScreenState extends State<PembayaranScreen> with AutomaticKeepA
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            Get.back();
+          },
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Kembali',
+        ),
         title: Text(
           'Detail Pembayaran',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -106,6 +113,7 @@ class _PembayaranScreenState extends State<PembayaranScreen> with AutomaticKeepA
               _controller.getInvoice(widget.idTransaksi);
             },
             icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
           ),
         ],
       ),
@@ -252,8 +260,9 @@ class _PembayaranScreenState extends State<PembayaranScreen> with AutomaticKeepA
           ),
           ElevatedButton(
             onPressed: () async {
-              Get.back();
+              Get.back(); // Tutup dialog
               await _controller.batalkanPesanan(noInvoice);
+              // Refresh data setelah pembatalan, tanpa menghapus navigation stack
               _controller.getInvoice(widget.idTransaksi);
             },
             style: ElevatedButton.styleFrom(
