@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
+import 'package:mobile_supportyou/utils/qr_saver.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
 
 class QrisPaymentInfo extends StatelessWidget {
@@ -81,49 +83,24 @@ class QrisPaymentInfo extends StatelessWidget {
                     ),
             ),
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue[200]!),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 20, color: Colors.blue[700]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Total yang harus dibayar:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.blue[700],
-                        ),
-                      ),
-                    ),
-                  ],
+          const SizedBox(height: 12),
+          if (qrisUrl != null && qrisUrl.isNotEmpty)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => QRSaver.saveToGallery(qrisUrl),
+                icon: const Icon(Icons.download, size: 20),
+                label: Text('Simpan QR Code'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      Formatter.formatCurrency(totalBayar),
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );
