@@ -1,4 +1,3 @@
-// lib/models/pelatihan_model.dart
 class Pelatihan {
   final int id;
   final String nama;
@@ -8,22 +7,23 @@ class Pelatihan {
   final int? hargaFinal;
   final String? tempat;
   final String? waktu;
+  final String? startTime;
+  final String? endTime;
   final String? cover;
-  final String type; // 'pelatihan' atau 'ebook'
+  final String type;
   final String? typePelatihan;
   final int? maxPeserta;
   final Mitra? mitra;
   final List<Section> sections;
   final List<Testimonial> testimonials;
   final Speaker? speaker;
-  final int? tokoMemberId; // 🔥 Tambahkan ini untuk toko_member_id
-
-  // Field khusus Ebook
+  final int? tokoMemberId;
   final String? penulis;
   final String? penerbit;
   final int? tahunTerbit;
   final int? jumlahHalaman;
   final String? isbn;
+  final List<Batch> batches;
 
   Pelatihan({
     required this.id,
@@ -34,6 +34,8 @@ class Pelatihan {
     this.hargaFinal,
     this.tempat,
     this.waktu,
+    this.startTime,
+    this.endTime,
     this.cover,
     required this.type,
     this.typePelatihan,
@@ -42,16 +44,16 @@ class Pelatihan {
     this.sections = const [],
     this.testimonials = const [],
     this.speaker,
-    this.tokoMemberId, // 🔥 Tambahkan
+    this.tokoMemberId,
     this.penulis,
     this.penerbit,
     this.tahunTerbit,
     this.jumlahHalaman,
     this.isbn,
+    this.batches = const [],
   });
 
   factory Pelatihan.fromJson(Map<String, dynamic> json) {
-    // 🔥 Ambil tokoMemberId dari mitra jika ada
     int? tokoMemberId;
     if (json['mitra'] != null) {
       tokoMemberId = json['mitra']['member_id'] ?? json['mitra']['id'];
@@ -66,6 +68,8 @@ class Pelatihan {
       hargaFinal: json['harga_final'],
       tempat: json['tempat'],
       waktu: json['waktu'],
+      startTime: json['start_time'],
+      endTime: json['end_time'],
       cover: json['cover'],
       type: json['type'] ?? 'pelatihan',
       typePelatihan: json['type_pelatihan'],
@@ -78,12 +82,15 @@ class Pelatihan {
               ?.map((e) => Testimonial.fromJson(e))
               .toList() ?? [],
       speaker: json['speakers'] != null ? Speaker.fromJson(json['speakers']) : null,
-      tokoMemberId: tokoMemberId, // 🔥 Set nilai tokoMemberId
+      tokoMemberId: tokoMemberId,
       penulis: json['penulis'],
       penerbit: json['penerbit'],
       tahunTerbit: json['tahun_terbit'],
       jumlahHalaman: json['jumlah_halaman'],
       isbn: json['isbn'],
+      batches: (json['batches'] as List?)
+              ?.map((e) => Batch.fromJson(e))
+              .toList() ?? [],
     );
   }
 }
@@ -91,7 +98,7 @@ class Pelatihan {
 class Mitra {
   final int id;
   final String nama;
-  final int? memberId; // 🔥 Tambahkan memberId untuk toko_member_id
+  final int? memberId;
   
   Mitra({
     required this.id, 
@@ -103,7 +110,7 @@ class Mitra {
     return Mitra(
       id: json['id'],
       nama: json['nama_lengkap'] ?? json['nama'] ?? '-',
-      memberId: json['member_id'] ?? json['id'], // 🔥 Ambil member_id
+      memberId: json['member_id'] ?? json['id'],
     );
   }
 }
@@ -127,13 +134,15 @@ class Section {
 class Testimonial {
   final String name;
   final String content;
+  final String? createdAt;
 
-  Testimonial({required this.name, required this.content});
+  Testimonial({required this.name, required this.content, this.createdAt});
 
   factory Testimonial.fromJson(Map<String, dynamic> json) {
     return Testimonial(
       name: json['name'] ?? 'Anonim',
       content: json['content'] ?? '',
+      createdAt: json['created_at'],
     );
   }
 }
@@ -151,5 +160,99 @@ class Speaker {
       position: json['position'],
       bio: json['bio'],
     );
+  }
+}
+
+class Batch {
+  final int id;
+  final String kodeBatch;
+  final String namaBatch;
+  final String? tanggalMulai;
+  final String? tanggalSelesai;
+  final String? jamMulai;
+  final String? jamSelesai;
+  final int maxPeserta;
+  final String status;
+  final String? meetingLink;
+  final String? tempat;
+  final int pesertaTerdaftar;
+  final int sisaPeserta;
+
+  Batch({
+    required this.id,
+    required this.kodeBatch,
+    required this.namaBatch,
+    this.tanggalMulai,
+    this.tanggalSelesai,
+    this.jamMulai,
+    this.jamSelesai,
+    required this.maxPeserta,
+    required this.status,
+    this.meetingLink,
+    this.tempat,
+    required this.pesertaTerdaftar,
+    required this.sisaPeserta,
+  });
+
+  factory Batch.fromJson(Map<String, dynamic> json) {
+    return Batch(
+      id: json['id'],
+      kodeBatch: json['kode_batch'] ?? '',
+      namaBatch: json['nama_batch'] ?? '',
+      tanggalMulai: json['tanggal_mulai'],
+      tanggalSelesai: json['tanggal_selesai'],
+      jamMulai: json['jam_mulai'],
+      jamSelesai: json['jam_selesai'],
+      maxPeserta: json['max_peserta'] ?? 0,
+      status: json['status'] ?? '',
+      meetingLink: json['meeting_link'],
+      tempat: json['tempat'],
+      pesertaTerdaftar: json['peserta_terdaftar'] ?? 0,
+      sisaPeserta: json['sisa_peserta'] ?? 0,
+    );
+  }
+
+  String get formattedDateRange {
+    if (tanggalMulai == null || tanggalSelesai == null) return 'Belum ditentukan';
+    final start = _formatDate(tanggalMulai!);
+    final end = _formatDate(tanggalSelesai!);
+    return '$start – $end';
+  }
+
+  String get formattedTimeRange {
+    if (jamMulai == null || jamSelesai == null) return 'Belum ditentukan';
+    return '${_formatTime(jamMulai!)} – ${_formatTime(jamSelesai!)} WIB';
+  }
+
+  String _formatDate(String date) {
+    try {
+      final parts = date.split('-');
+      if (parts.length == 3) {
+        return '${parts[2]} ${_getMonthName(int.parse(parts[1]))} ${parts[0]}';
+      }
+      return date;
+    } catch (e) {
+      return date;
+    }
+  }
+
+  String _formatTime(String time) {
+    try {
+      final parts = time.split(':');
+      if (parts.length >= 2) {
+        return '${parts[0]}:${parts[1]}';
+      }
+      return time;
+    } catch (e) {
+      return time;
+    }
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return months[month - 1];
   }
 }

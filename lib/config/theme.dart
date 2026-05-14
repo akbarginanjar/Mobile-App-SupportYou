@@ -112,7 +112,7 @@ ThemeData defaultTheme(BuildContext context) {
   );
 }
 
-Color primary = HexColor('#2196f3');
+Color primary = HexColor('#0070c6');
 Color secondary = HexColor('#e2477f');
 // Color primary2 = HexColor('#f2d4a0');
 Color success = HexColor('#00b300');
