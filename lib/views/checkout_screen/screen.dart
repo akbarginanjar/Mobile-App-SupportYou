@@ -1,4 +1,3 @@
-// lib/views/checkout_screen/screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
@@ -486,7 +485,6 @@ class CheckoutScreen extends StatelessWidget {
   
   Widget _buildOrderSummary(BuildContext context, CheckoutController controller) {
     final basePrice = controller.pelatihan.hargaFinal ?? controller.pelatihan.harga;
-    final priceAfterDiscount = basePrice - controller.discountAmount.value;
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -530,8 +528,27 @@ class CheckoutScreen extends StatelessWidget {
             'Biaya Aplikasi',
             Formatter.formatCurrency(controller.appFee.value),
           ),
-          
           const SizedBox(height: 12),
+          
+          Obx(() {
+            if (controller.paymentGatewayFee.value > 0) {
+              String feeLabel = 'Biaya Layanan';
+              if (controller.paymentGatewayFeeType.value == 'percentage') {
+                feeLabel = 'Biaya Biaya Layanan (${controller.paymentGatewayFeeValue.value}%)';
+              }
+              return Column(
+                children: [
+                  _buildSummaryRow(
+                    context,
+                    feeLabel,
+                    Formatter.formatCurrency(controller.paymentGatewayFee.value),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              );
+            }
+            return const SizedBox.shrink();
+          }),
           
           Obx(() => controller.discountAmount.value > 0
               ? Column(

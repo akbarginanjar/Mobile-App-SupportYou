@@ -1,35 +1,33 @@
-// lib/controllers/pelatihan_controller.dart
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/services/pelatihan_service.dart';
+import 'package:mobile_supportyou/services/riwayat_pelatihan_service.dart';
 
 class PelatihanController extends GetxController {
   final PelatihanService _pelatihanService = PelatihanService();
+  final RiwayatPelatihanService _riwayatService = RiwayatPelatihanService();
   
-  // Untuk Home
   final isLoadingHome = true.obs;
   final pelatihanListHome = <Pelatihan>[].obs;
   
-  // Untuk Semua Pelatihan
   final isLoadingAll = true.obs;
   final isMoreLoadingAll = false.obs;
   final pelatihanListAll = <Pelatihan>[].obs;
   var currentStartAll = 0;
   var hasMoreDataAll = true;
   
-  // Untuk Detail
   final isLoadingDetail = true.obs;
   final detailPelatihan = Rx<Pelatihan?>(null);
   
-  // Untuk Kategori
   final isLoadingKategori = false.obs;
   final pelatihanByKategori = <Pelatihan>[].obs;
   
-  // Untuk Search
   final isSearching = false.obs;
   final searchResult = <Pelatihan>[].obs;
+
+  final hasAccess = false.obs;
+  final purchasedPelatihanIds = <int>[].obs;
   
-  // ==================== HOME ====================
   Future<void> loadPelatihanHome() async {
     try {
       isLoadingHome.value = true;
@@ -42,7 +40,6 @@ class PelatihanController extends GetxController {
     }
   }
   
-  // ==================== SEMUA PELATIHAN ====================
   Future<void> loadPelatihanAll({bool reset = true}) async {
     if (reset) {
       currentStartAll = 0;
@@ -85,12 +82,25 @@ class PelatihanController extends GetxController {
     }
   }
   
-  // ==================== DETAIL ====================
+  Future<void> loadPurchasedPelatihanIds() async {
+    try {
+      final purchased = await _riwayatService.getPelatihanDibeli();
+      purchasedPelatihanIds.assignAll(purchased.map((e) => e.id));
+    } catch (e) {
+      print('Error loading purchased pelatihan: $e');
+      purchasedPelatihanIds.clear();
+    }
+  }
+  
   Future<void> loadDetailPelatihan(String slug) async {
     try {
       isLoadingDetail.value = true;
+      await loadPurchasedPelatihanIds();
       final result = await _pelatihanService.getDetailPelatihan(slug);
       detailPelatihan.value = result;
+      if (result != null) {
+        hasAccess.value = purchasedPelatihanIds.contains(result.id);
+      }
     } catch (e) {
       print('Error loading detail pelatihan: $e');
       detailPelatihan.value = null;
@@ -99,7 +109,6 @@ class PelatihanController extends GetxController {
     }
   }
   
-  // ==================== KATEGORI ====================
   Future<void> loadPelatihanByKategori(int kategoriId) async {
     try {
       isLoadingKategori.value = true;
@@ -113,7 +122,6 @@ class PelatihanController extends GetxController {
     }
   }
   
-  // ==================== SEARCH ====================
   Future<void> searchPelatihanAll(String query) async {
     if (query.isEmpty) {
       isSearching.value = false;
@@ -138,7 +146,6 @@ class PelatihanController extends GetxController {
     isSearching.value = false;
   }
   
-  // ==================== REFRESH ====================
   Future<void> refreshAll() async {
     await Future.wait([
       loadPelatihanHome(),

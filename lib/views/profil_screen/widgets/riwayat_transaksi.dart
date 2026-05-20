@@ -1,10 +1,10 @@
-// lib/views/profil_screen/widgets/riwayat_transaksi.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/riwayat_pelatihan_controller.dart';
-import 'package:mobile_supportyou/services/riwayat_pelatihan_service.dart';
+import 'package:mobile_supportyou/models/riwayat_pelatihan_model.dart';
+import 'package:mobile_supportyou/utils/date_formatter.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
 
 class RiwayatTransaksi extends StatelessWidget {
@@ -18,11 +18,11 @@ class RiwayatTransaksi extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: textTheme.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -48,7 +48,6 @@ class RiwayatTransaksi extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  // Navigasi ke halaman riwayat lengkap
                   Get.snackbar(
                     'Info',
                     'Fitur lihat semua transaksi akan segera hadir',
@@ -63,7 +62,6 @@ class RiwayatTransaksi extends StatelessWidget {
           
           const Divider(height: 24),
           
-          // 🔥 DAFTAR PELATIHAN YANG SUDAH DIBELI
           Obx(() {
             if (controller.isLoading.value && controller.pelatihanList.isEmpty) {
               return const Center(
@@ -98,7 +96,6 @@ class RiwayatTransaksi extends StatelessWidget {
               );
             }
             
-            // Hanya tampilkan 3 item terbaru
             final displayList = controller.pelatihanList.length > 3 
                 ? controller.pelatihanList.take(3).toList() 
                 : controller.pelatihanList.toList();
@@ -122,6 +119,7 @@ class RiwayatTransaksi extends StatelessWidget {
   Widget _buildTransactionItem(BuildContext context, PelatihanDibeli item) {
     final isOnline = item.typePelatihan == 'online';
     final isOffline = item.typePelatihan == 'offline';
+    final formattedDate = DateFormatter.formatDateWithDayAndTime(item.waktu);
     
     return InkWell(
       onTap: () {
@@ -133,7 +131,6 @@ class RiwayatTransaksi extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Nama Pelatihan
             Text(
               item.nama,
               style: const TextStyle(
@@ -142,35 +139,31 @@ class RiwayatTransaksi extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            
-            // Penyelenggara
             Text(
               item.mitra?.nama ?? 'Ahmad Fauzi',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: textTheme.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 6),
-            
-            // Baris: Waktu + Badge Online/Offline
             Row(
               children: [
-                Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
+                Icon(Icons.access_time, size: 12, color: textTheme.withValues(alpha: 0.5)),
                 const SizedBox(width: 4),
                 Text(
-                  _formatDateTime(item.waktu ?? ''),
-                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                  formattedDate,
+                  style: TextStyle(fontSize: 11, color: textTheme.withValues(alpha: 0.5)),
                 ),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: isOnline 
-                        ? Colors.blue.withValues(alpha: 0.1) 
+                        ? primary.withValues(alpha: 0.1) 
                         : (isOffline 
-                            ? Colors.orange.withValues(alpha: 0.1) 
-                            : Colors.green.withValues(alpha: 0.1)),
+                            ? warning.withValues(alpha: 0.1) 
+                            : success.withValues(alpha: 0.1)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -179,25 +172,23 @@ class RiwayatTransaksi extends StatelessWidget {
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
                       color: isOnline 
-                          ? Colors.blue 
-                          : (isOffline ? Colors.orange : Colors.green),
+                          ? primary 
+                          : (isOffline ? warning : success),
                     ),
                   ),
                 ),
               ],
             ),
-            
-            // Lokasi (hanya untuk offline)
             if (isOffline && item.tempat != null) ...[
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 12, color: Colors.grey[500]),
+                  Icon(Icons.location_on, size: 12, color: textTheme.withValues(alpha: 0.5)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       item.tempat!,
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: 11, color: textTheme.withValues(alpha: 0.5)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -205,18 +196,16 @@ class RiwayatTransaksi extends StatelessWidget {
                 ],
               ),
             ],
-            
-            // Link Meeting (hanya untuk online)
             if (isOnline) ...[
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.link, size: 12, color: Colors.grey[500]),
+                  Icon(Icons.link, size: 12, color: textTheme.withValues(alpha: 0.5)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       'Link meeting akan dikirim via email',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: 11, color: textTheme.withValues(alpha: 0.5)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -224,10 +213,7 @@ class RiwayatTransaksi extends StatelessWidget {
                 ],
               ),
             ],
-            
             const SizedBox(height: 8),
-            
-            // Kode Akses (ringkasan)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -259,6 +245,7 @@ class RiwayatTransaksi extends StatelessWidget {
   void _showDetailDialog(BuildContext context, PelatihanDibeli item) {
     final isOnline = item.typePelatihan == 'online';
     final isOffline = item.typePelatihan == 'offline';
+    final formattedDate = DateFormatter.formatDateWithDayAndTime(item.waktu);
     
     Get.dialog(
       AlertDialog(
@@ -279,7 +266,7 @@ class RiwayatTransaksi extends StatelessWidget {
                 const Divider(),
                 _detailRow('Penyelenggara', item.mitra?.nama ?? '-'),
                 const SizedBox(height: 8),
-                _detailRow('Tanggal', _formatDateTime(item.waktu ?? '')),
+                _detailRow('Tanggal', formattedDate),
                 const SizedBox(height: 8),
                 if (isOffline && item.tempat != null)
                   _detailRow('Lokasi', item.tempat!),
@@ -365,19 +352,9 @@ class RiwayatTransaksi extends StatelessWidget {
     );
   }
   
-  String _formatDateTime(String dateTimeString) {
-    if (dateTimeString.isEmpty) return '-';
-    try {
-      final DateTime dateTime = DateTime.parse(dateTimeString);
-      return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return dateTimeString;
-    }
-  }
-  
   void _copyToClipboard(String text) {
-    Get.clipboard?.setData(ClipboardData(text: text));
-    Get.back(); // Tutup dialog terlebih dahulu
+    Clipboard.setData(ClipboardData(text: text));
+    Get.back();
     Get.snackbar(
       'Berhasil',
       'Kode akses disalin',
@@ -387,8 +364,4 @@ class RiwayatTransaksi extends StatelessWidget {
       duration: const Duration(seconds: 2),
     );
   }
-}
-
-extension on GetInterface {
-  get clipboard => null;
 }

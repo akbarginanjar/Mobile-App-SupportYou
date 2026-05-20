@@ -1,20 +1,17 @@
-// lib/controllers/riwayat_pelatihan_controller.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
+import 'package:mobile_supportyou/models/riwayat_pelatihan_model.dart';
 import 'package:mobile_supportyou/services/riwayat_pelatihan_service.dart';
 
 class RiwayatPelatihanController extends GetxController {
   final RiwayatPelatihanService _riwayatService = RiwayatPelatihanService();
   
-  // Tab index
   final currentTab = 0.obs;
-  
-  // Data Pelatihan
   final isLoading = false.obs;
   final pelatihanList = <PelatihanDibeli>[].obs;
-  
+
   @override
   void onInit() {
     super.onInit();
@@ -103,7 +100,7 @@ class RiwayatPelatihanController extends GetxController {
   }
   
   void _copyToClipboard(String text) {
-    Get.clipboard?.setData(ClipboardData(text: text));
+    Clipboard.setData(ClipboardData(text: text));
     Get.snackbar(
       'Berhasil',
       'Kode akses disalin',
@@ -113,8 +110,4 @@ class RiwayatPelatihanController extends GetxController {
       duration: const Duration(seconds: 2),
     );
   }
-}
-
-extension on GetInterface {
-  get clipboard => null;
 }

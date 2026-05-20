@@ -23,11 +23,11 @@ class OrderSummary extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: textTheme.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -50,9 +50,6 @@ class OrderSummary extends StatelessWidget {
           _buildSummaryRow(context, 'BIAYA LAYANAN', Formatter.formatCurrency(biayaLayanan)),
           const SizedBox(height: 8),
           
-          _buildSummaryRow(context, 'BIAYA APLIKASI', Formatter.formatCurrency(biayaAplikasi)),
-          const SizedBox(height: 8),
-          
           if (diskon > 0) ...[
             _buildSummaryRow(
               context, 
@@ -63,7 +60,7 @@ class OrderSummary extends StatelessWidget {
             const SizedBox(height: 8),
           ],
           
-          const Divider(color: Colors.grey, thickness: 0.5),
+          Divider(color: textTheme, thickness: 0.5),
           const SizedBox(height: 8),
           
           _buildSummaryRow(
@@ -89,14 +86,14 @@ class OrderSummary extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: isDiscount ? Colors.red : (isTotal ? Colors.black87 : textTheme),
+              color: isDiscount ? danger : (isTotal ? textTheme : textTheme),
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
             ),
           ),
           Text(
             value,
             style: TextStyle(
-              color: isDiscount ? Colors.red : (isTotal ? primary : textTheme),
+              color: isDiscount ? danger : (isTotal ? primary : textTheme),
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
               fontSize: isTotal ? 16 : 13,
             ),

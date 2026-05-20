@@ -1,9 +1,9 @@
-// lib/views/transaksi/transaksi_pelatihan/card/transaksi_card.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/models/transaksi_model.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
+import 'package:mobile_supportyou/utils/date_formatter.dart';
 import 'package:mobile_supportyou/utils/value_formatter.dart';
 import 'package:mobile_supportyou/views/pembayaran/screen.dart';
 
@@ -15,19 +15,18 @@ class TransaksiCard extends StatelessWidget {
   Color _getStatusColor() {
     switch (transaksi.status) {
       case 'pending':
-        return const Color(0xFFF59E0B); // Orange
+        return warning;
       case 'dibatalkan':
-        return const Color(0xFFEF4444); // Red
+        return danger;
       case 'expired':
-        return const Color(0xFF6B7280); // Gray
+        return Colors.grey;
       case 'selesai':
-        return const Color(0xFF10B981); // Green
+        return success;
       default:
-        return const Color(0xFF3B82F6); // Blue
+        return primary;
     }
   }
 
-  // Method untuk membuat Pelatihan dari data transaksi
   Pelatihan _createPelatihanFromTransaksi() {
     final item = transaksi.item.isNotEmpty ? transaksi.item[0] : null;
     
@@ -59,11 +58,12 @@ class TransaksiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor();
+    final formattedDate = DateFormatter.formatDateWithDayAndTime(transaksi.waktuTransaksi);
     
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: Colors.white,
+      color: theme,
       elevation: 2,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -81,7 +81,6 @@ class TransaksiCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Status Badge - langsung dari API
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -99,17 +98,16 @@ class TransaksiCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               
-              // No Invoice
               Text(
                 transaksi.noInvoice,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
+                  color: textTheme,
                 ),
               ),
               const SizedBox(height: 12),
               
-              // Row: Tanggal dan Nominal
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -119,12 +117,16 @@ class TransaksiCard extends StatelessWidget {
                       children: [
                         Text(
                           "Tanggal Transaksi",
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: textTheme,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          transaksi.waktuTransaksi,
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          formattedDate,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: textTheme,
+                          ),
                         ),
                       ],
                     ),
@@ -135,7 +137,9 @@ class TransaksiCard extends StatelessWidget {
                       children: [
                         Text(
                           "Nominal",
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: textTheme,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -153,11 +157,10 @@ class TransaksiCard extends StatelessWidget {
               
               const SizedBox(height: 12),
               
-              // Produk Info
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: textTheme.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -168,13 +171,16 @@ class TransaksiCard extends StatelessWidget {
                         children: [
                           Text(
                             "Produk",
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: textTheme,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             transaksi.item.isNotEmpty ? transaksi.item[0].nama : '-',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
+                              color: textTheme,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -185,7 +191,9 @@ class TransaksiCard extends StatelessWidget {
                     if (transaksi.item.isNotEmpty)
                       Text(
                         'x${transaksi.item[0].qty}',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: textTheme,
+                        ),
                       ),
                   ],
                 ),

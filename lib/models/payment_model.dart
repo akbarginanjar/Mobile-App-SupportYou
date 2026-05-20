@@ -1,4 +1,3 @@
-// lib/models/payment_model.dart
 import 'package:mobile_supportyou/utils/value_formatter.dart';
 
 class PaymentMethod {
@@ -9,6 +8,8 @@ class PaymentMethod {
   final String? description;
   final String? type;
   final int? fee;
+  final String? feeType;
+  final int? feeValue;
   
   PaymentMethod({
     required this.name,
@@ -18,6 +19,8 @@ class PaymentMethod {
     this.description,
     this.type,
     this.fee,
+    this.feeType,
+    this.feeValue,
   });
 }
 
@@ -75,7 +78,7 @@ class Discount {
     if (type == 'percentage') {
       return (price * value / 100).floor();
     } else {
-      return value; // nominal
+      return value;
     }
   }
   

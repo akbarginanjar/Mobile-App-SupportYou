@@ -141,6 +141,44 @@ class PelatihanScreen extends StatelessWidget {
       bottomNavigationBar: Obx(() {
         final pelatihan = controller.detailPelatihan.value;
         if (pelatihan == null) return const SizedBox.shrink();
+
+        if (controller.hasAccess.value) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[400],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: null,
+                icon: const Icon(Icons.flash_on, size: 20),
+                label: const Text(
+                  'Sudah Memiliki Akses',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
         
         return Container(
           padding: const EdgeInsets.all(16),
@@ -155,7 +193,7 @@ class PelatihanScreen extends StatelessWidget {
             ],
           ),
           child: SafeArea(
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: primary,
                 foregroundColor: Colors.white,
@@ -168,10 +206,10 @@ class PelatihanScreen extends StatelessWidget {
               onPressed: () {
                 Get.to(() => CheckoutScreen(pelatihan: pelatihan));
               },
-              child: Text(
-                'Beli Sekarang',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white,
+              icon: const Icon(Icons.flash_on, size: 20),
+              label: const Text(
+                'Daftar Sekarang',
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -182,4 +220,4 @@ class PelatihanScreen extends StatelessWidget {
       }),
     );
   }
-}
+} 

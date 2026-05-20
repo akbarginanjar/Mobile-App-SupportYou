@@ -34,7 +34,7 @@ class ActionButtons extends StatelessWidget {
             ElevatedButton(
               onPressed: onCancel,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: danger,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -44,7 +44,7 @@ class ActionButtons extends StatelessWidget {
               child: Text(
                 'Batalkan Pesanan',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
+                  color: theme,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -65,16 +65,16 @@ class ActionButtons extends StatelessWidget {
                         barrierDismissible: false,
                       );
                     },
-                    icon: const Icon(Icons.report_problem_outlined, color: Colors.white),
+                    icon: Icon(Icons.report_problem_outlined, color: theme),
                     label: Text(
                       'Komplain',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white,
+                        color: theme,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                      backgroundColor: warning,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -101,11 +101,11 @@ class ActionButtons extends StatelessWidget {
                 });
               }
             },
-            icon: const Icon(Icons.history, color: Colors.white),
+            icon: Icon(Icons.history, color: theme),
             label: Text(
               'Lihat Pesanan Lain',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
+                color: theme,
                 fontWeight: FontWeight.w600,
               ),
             ),

@@ -24,11 +24,11 @@ class VirtualAccountInfo extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: textTheme.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -37,30 +37,34 @@ class VirtualAccountInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Virtual Account',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
+          Text(
+            'Silakan transfer ke Virtual Account berikut',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: textTheme,
+            ),
+          ),
+          const SizedBox(height: 16),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                bankCode,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: primary,
-                ),
+            leading: Text(
+              bankCode,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: textTheme,
+                fontSize: 14,
               ),
             ),
             title: Text(
               vaNumber,
-              style: const TextStyle(
+              style: TextStyle(
+                color: primary,
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
@@ -73,7 +77,7 @@ class VirtualAccountInfo extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text('SALIN'),
+              child: Text('SALIN', style: TextStyle(color: primary)),
             ),
           ),
         ],

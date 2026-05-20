@@ -10,6 +10,7 @@ import 'package:mobile_supportyou/views/pembayaran/sections/status_header.dart';
 import 'package:mobile_supportyou/views/pembayaran/sections/qris_payment_info.dart';
 import 'package:mobile_supportyou/views/pembayaran/sections/virtual_account_info.dart';
 import 'package:mobile_supportyou/views/pembayaran/sections/invoice_info.dart';
+import 'package:mobile_supportyou/views/pembayaran/sections/customer_info.dart';
 import 'package:mobile_supportyou/views/pembayaran/sections/product_info.dart';
 import 'package:mobile_supportyou/views/pembayaran/sections/order_summary.dart';
 import 'package:mobile_supportyou/views/pembayaran/sections/action_buttons.dart';
@@ -187,7 +188,7 @@ class _PembayaranScreenState extends State<PembayaranScreen> with AutomaticKeepA
               if (!isExpired && showPaymentInfo) ...[
                 if (metodeBayar == 'payment_gateway' && paymentInfo != null) ...[
                   if (paymentInfo['payment_type'] == 'qris')
-                    QrisPaymentInfo(data: data),
+                    QrisPaymentInfo(data: data, totalFromController: _controller.totalPrice.value),
                   if (paymentInfo['payment_type'] == 'bank_transfer')
                     VirtualAccountInfo(data: data, controller: _controller),
                 ],
@@ -195,6 +196,9 @@ class _PembayaranScreenState extends State<PembayaranScreen> with AutomaticKeepA
               ],
               
               InvoiceInfo(data: data, controller: _controller),
+              const SizedBox(height: 16),
+              CustomerInfo(data: data),
+              const SizedBox(height: 16),
               ProductInfo(data: data),
               OrderSummary(data: data),
               
@@ -260,9 +264,8 @@ class _PembayaranScreenState extends State<PembayaranScreen> with AutomaticKeepA
           ),
           ElevatedButton(
             onPressed: () async {
-              Get.back(); // Tutup dialog
+              Get.back();
               await _controller.batalkanPesanan(noInvoice);
-              // Refresh data setelah pembatalan, tanpa menghapus navigation stack
               _controller.getInvoice(widget.idTransaksi);
             },
             style: ElevatedButton.styleFrom(

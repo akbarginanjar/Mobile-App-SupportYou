@@ -23,16 +23,16 @@ class StatusHeader extends StatelessWidget {
     if (refundStatus == 'pending') {
       return Container(
         width: double.infinity,
-        color: Colors.orange[50],
+        color: warning.withValues(alpha: 0.1),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Icon(Icons.pending_actions, size: 48, color: Colors.orange[700]),
+            Icon(Icons.pending_actions, size: 48, color: warning),
             const SizedBox(height: 8),
             Text(
               'Pengajuan Refund',
               style: TextStyle(
-                color: Colors.orange[700],
+                color: warning,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -41,7 +41,7 @@ class StatusHeader extends StatelessWidget {
             Text(
               'pending',
               style: TextStyle(
-                color: Colors.orange[600],
+                color: warning,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -55,16 +55,16 @@ class StatusHeader extends StatelessWidget {
     if (status == 'expired') {
       return Container(
         width: double.infinity,
-        color: Colors.orange[50],
+        color: warning.withValues(alpha: 0.1),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Icon(Icons.timer_off, size: 48, color: Colors.orange[700]),
+            Icon(Icons.timer_off, size: 48, color: warning),
             const SizedBox(height: 8),
             Text(
               'Transaksi Kadaluarsa',
               style: TextStyle(
-                color: Colors.orange[700],
+                color: warning,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -72,7 +72,7 @@ class StatusHeader extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Pesanan telah melewati batas waktu pembayaran',
-              style: TextStyle(color: Colors.orange[600], fontSize: 13),
+              style: TextStyle(color: warning, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ],
@@ -83,16 +83,16 @@ class StatusHeader extends StatelessWidget {
     if (status == 'dibatalkan') {
       return Container(
         width: double.infinity,
-        color: Colors.red[50],
+        color: danger.withValues(alpha: 0.1),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Icon(Icons.cancel, size: 48, color: Colors.red[700]),
+            Icon(Icons.cancel, size: 48, color: danger),
             const SizedBox(height: 8),
             Text(
               'Transaksi Dibatalkan',
               style: TextStyle(
-                color: Colors.red[700],
+                color: danger,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -100,7 +100,7 @@ class StatusHeader extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Pesanan telah dibatalkan',
-              style: TextStyle(color: Colors.red[600], fontSize: 13),
+              style: TextStyle(color: danger, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ],
@@ -111,26 +111,26 @@ class StatusHeader extends StatelessWidget {
     if (statusBayar == 'belum_lunas' && status == 'pending') {
       return Container(
         width: double.infinity,
-        color: Colors.red[50],
+        color: danger.withValues(alpha: 0.1),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Text(
               'Batas waktu bayar',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
+                color: textTheme,
               ),
             ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.timer, color: Colors.red, size: 24),
+                Icon(Icons.timer, color: danger, size: 24),
                 const SizedBox(width: 8),
                 Obx(() => Text(
                   controller.countdown.value.isEmpty ? 'Menghitung...' : controller.countdown.value,
-                  style: const TextStyle(
-                    color: Colors.red,
+                  style: TextStyle(
+                    color: danger,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -145,16 +145,16 @@ class StatusHeader extends StatelessWidget {
     if (statusBayar == 'lunas' && status == 'selesai') {
       return Container(
         width: double.infinity,
-        color: Colors.green[50],
+        color: success.withValues(alpha: 0.1),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Icon(Icons.check_circle, size: 48, color: Colors.green[700]),
+            Icon(Icons.check_circle, size: 48, color: success),
             const SizedBox(height: 8),
             Text(
               'Pesanan Selesai',
               style: TextStyle(
-                color: Colors.green[700],
+                color: success,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -162,7 +162,7 @@ class StatusHeader extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Terima kasih telah menggunakan layanan kami',
-              style: TextStyle(color: Colors.green[600], fontSize: 13),
+              style: TextStyle(color: success, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ],
@@ -173,16 +173,16 @@ class StatusHeader extends StatelessWidget {
     if (statusBayar == 'lunas' && status != 'selesai') {
       return Container(
         width: double.infinity,
-        color: Colors.blue[50],
+        color: primary.withValues(alpha: 0.1),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Icon(Icons.pending, size: 48, color: Colors.blue[700]),
+            Icon(Icons.pending, size: 48, color: primary),
             const SizedBox(height: 8),
             Text(
               'Pembayaran Diterima',
               style: TextStyle(
-                color: Colors.blue[700],
+                color: primary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -190,7 +190,7 @@ class StatusHeader extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Pesanan Anda sedang diproses',
-              style: TextStyle(color: Colors.blue[600], fontSize: 13),
+              style: TextStyle(color: primary, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ],

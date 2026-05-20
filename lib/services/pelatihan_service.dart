@@ -1,10 +1,9 @@
-// lib/services/pelatihan_service.dart
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/utils/base.dart';
 
 class PelatihanService extends GetConnect {
-  // 🔹 Ambil list pelatihan untuk home (limit 6)
+  
   Future<List<Pelatihan>> getPelatihanHome() async {
     final response = await get(
       '${Base.url}/v1/pelatihan?is_published=1&start=0&length=6&type=pelatihan',
@@ -23,7 +22,6 @@ class PelatihanService extends GetConnect {
     }
   }
 
-  // 🔹 Ambil list pelatihan untuk halaman semua pelatihan (dengan pagination)
   Future<List<Pelatihan>> getPelatihanAll({int start = 0, int length = 10}) async {
     final response = await get(
       '${Base.url}/v1/pelatihan?is_published=1&start=$start&length=$length&type=pelatihan',
@@ -42,7 +40,6 @@ class PelatihanService extends GetConnect {
     }
   }
 
-  // 🔹 Ambil detail pelatihan
   Future<Pelatihan?> getDetailPelatihan(String id) async {
     final response = await get(
       '${Base.url}/v1/pelatihan/$id?type=pelatihan',
@@ -60,7 +57,6 @@ class PelatihanService extends GetConnect {
     }
   }
 
-  // 🔹 Search pelatihan
   Future<List<Pelatihan>> searchPelatihan(String query, {int start = 0, int length = 10}) async {
     final response = await get(
       '${Base.url}/v1/pelatihan?is_published=1&search=$query&start=$start&length=$length&type=pelatihan',
@@ -79,7 +75,6 @@ class PelatihanService extends GetConnect {
     }
   }
 
-  // 🔹 Ambil pelatihan berdasarkan kategori
   Future<List<Pelatihan>> getPelatihanByKategori(int kategoriId) async {
     final response = await get(
       '${Base.url}/v1/pelatihan?is_published=1&kategori_id=$kategoriId&type=pelatihan',
