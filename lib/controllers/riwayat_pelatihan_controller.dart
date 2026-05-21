@@ -1,9 +1,11 @@
+// lib/controllers/riwayat_pelatihan_controller.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/models/riwayat_pelatihan_model.dart';
 import 'package:mobile_supportyou/services/riwayat_pelatihan_service.dart';
+import 'package:mobile_supportyou/views/detail_pelatihan_dibeli/screen.dart';
 
 class RiwayatPelatihanController extends GetxController {
   final RiwayatPelatihanService _riwayatService = RiwayatPelatihanService();
@@ -23,9 +25,9 @@ class RiwayatPelatihanController extends GetxController {
       isLoading.value = true;
       final result = await _riwayatService.getPelatihanDibeli();
       pelatihanList.assignAll(result);
-      debugPrint('✅ Loaded ${result.length} purchased pelatihan');
+      debugPrint('Loaded ${result.length} purchased pelatihan');
     } catch (e) {
-      debugPrint('❌ Error loading pelatihan: $e');
+      debugPrint('Error loading pelatihan: $e');
       pelatihanList.clear();
     } finally {
       isLoading.value = false;
@@ -38,6 +40,10 @@ class RiwayatPelatihanController extends GetxController {
   
   Future<void> refreshData() async {
     await loadPelatihanDibeli();
+  }
+  
+  void goToDetail(PelatihanDibeli pelatihan) {
+    Get.to(() => DetailPelatihanDibeliScreen(pelatihan: pelatihan));
   }
   
   void showKodeAksesDialog(String kodeAkses, String namaPelatihan) {

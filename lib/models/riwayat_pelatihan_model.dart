@@ -1,3 +1,4 @@
+// lib/models/riwayat_pelatihan_model.dart
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/utils/base.dart';
 
@@ -15,6 +16,11 @@ class PelatihanDibeli {
   final String? typePelatihan;
   final int? maxPeserta;
   final Mitra? mitra;
+  final String status;
+  final String? startTime;
+  final String? endTime;
+  final String? meetingLink;
+  final String? linkGmaps;
   final List<RincianTransaksi> rincianTransaksi;
   final List<Attachment> attachments;
   
@@ -32,6 +38,11 @@ class PelatihanDibeli {
     this.typePelatihan,
     this.maxPeserta,
     this.mitra,
+    required this.status,
+    this.startTime,
+    this.endTime,
+    this.meetingLink,
+    this.linkGmaps,
     this.rincianTransaksi = const [],
     this.attachments = const [],
   });
@@ -72,6 +83,11 @@ class PelatihanDibeli {
       typePelatihan: json['type_pelatihan'],
       maxPeserta: json['max_peserta'],
       mitra: json['mitra'] != null ? Mitra.fromJson(json['mitra']) : null,
+      status: json['status'] ?? '',
+      startTime: json['start_time'],
+      endTime: json['end_time'],
+      meetingLink: json['meeting_link'],
+      linkGmaps: json['link_gmaps'],
       rincianTransaksi: (json['rincian_transaksi'] as List?)
           ?.map((e) => RincianTransaksi.fromJson(e))
           .toList() ?? [],

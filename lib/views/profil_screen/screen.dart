@@ -8,6 +8,7 @@ import 'package:mobile_supportyou/views/profil_screen/widgets/riwayat_transaksi.
 import 'package:mobile_supportyou/views/profil_screen/widgets/akun_info.dart';
 import 'package:mobile_supportyou/controllers/profil_controller.dart';
 import 'package:mobile_supportyou/controllers/riwayat_pelatihan_controller.dart';
+import 'package:mobile_supportyou/controllers/ebook_controller.dart';
 import 'package:mobile_supportyou/views/profil_screen/edit_profil.dart';
 import 'package:mobile_supportyou/views/profil_screen/ganti_password.dart';
 
@@ -18,6 +19,9 @@ class ProfilScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final ProfilController controller = Get.put(ProfilController());
     final RiwayatPelatihanController riwayatController = Get.put(RiwayatPelatihanController());
+    final EbookController ebookController = Get.put(EbookController());
+    
+    ebookController.loadEbookHome();
     
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -25,6 +29,7 @@ class ProfilScreen extends StatelessWidget {
         onRefresh: () async {
           await controller.refreshData();
           await riwayatController.refreshData();
+          await ebookController.refreshHome();
         },
         color: primary,
         child: CustomScrollView(
@@ -59,6 +64,7 @@ class ProfilScreen extends StatelessWidget {
                     if (result == true) {
                       controller.refreshData();
                       riwayatController.refreshData();
+                      ebookController.refreshHome();
                     }
                   },
                 ),
@@ -68,7 +74,6 @@ class ProfilScreen extends StatelessWidget {
                 ),
               ],
             ),
-            
             SliverList(
               delegate: SliverChildListDelegate([
                 const SizedBox(height: 16),
@@ -78,8 +83,7 @@ class ProfilScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 _buildMenuButtons(context),
                 const SizedBox(height: 16),
-                // 🔥 PERBAIKAN: Gunakan riwayatController, bukan controller
-                RiwayatTransaksi(controller: riwayatController),
+                RiwayatTransaksi(pelatihanController: riwayatController),
                 const SizedBox(height: 80),
               ]),
             ),
@@ -116,6 +120,7 @@ class ProfilScreen extends StatelessWidget {
               if (result == true) {
                 Get.find<ProfilController>().refreshData();
                 Get.find<RiwayatPelatihanController>().refreshData();
+                Get.find<EbookController>().refreshHome();
               }
             },
           ),

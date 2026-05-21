@@ -1,3 +1,4 @@
+// lib/services/riwayat_pelatihan_service.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -36,7 +37,7 @@ class RiwayatPelatihanService extends GetConnect {
     };
     
     if (token != null && token.isNotEmpty) {
-      headers['author'] = 'Bearer $token';
+      headers['Authorization'] = 'Bearer $token';
     }
     
     return headers;
@@ -46,25 +47,27 @@ class RiwayatPelatihanService extends GetConnect {
     final memberId = _getMemberId();
     
     if (memberId == null || memberId == 0) {
-      debugPrint('❌ Member ID not found');
+      debugPrint('Member ID not found');
       return [];
     }
     
     final url = '${Base.url}v1/pelatihan/pelatihan-dibeli?konsumen_member_id=$memberId';
     
-    debugPrint('📤 GET Pelatihan Dibeli: $url');
+    debugPrint('GET Pelatihan Dibeli: $url');
     
     try {
       final response = await get(url, headers: _getHeaders());
       
-      debugPrint('📥 Response Status: ${response.statusCode}');
+      debugPrint('Response Status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         final body = response.body;
         List result = [];
         
-        if (body['data'] is List) {
+        if (body is Map && body['data'] is List) {
           result = body['data'];
+        } else if (body is List) {
+          result = body;
         }
         
         final pelatihanDibeli = result
@@ -72,14 +75,14 @@ class RiwayatPelatihanService extends GetConnect {
             .map((json) => PelatihanDibeli.fromJson(json['data']))
             .toList();
         
-        debugPrint('✅ Loaded ${pelatihanDibeli.length} purchased items');
+        debugPrint('Loaded ${pelatihanDibeli.length} purchased items');
         return pelatihanDibeli;
       } else {
-        debugPrint('❌ HTTP Error: ${response.statusCode}');
+        debugPrint('HTTP Error: ${response.statusCode}');
         return [];
       }
     } catch (e) {
-      debugPrint('❌ Network Error: $e');
+      debugPrint('Network Error: $e');
       return [];
     }
   }
