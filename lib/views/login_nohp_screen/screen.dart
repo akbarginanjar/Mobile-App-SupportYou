@@ -1,3 +1,4 @@
+// lib/views/login_nohp_screen/screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -38,7 +39,7 @@ class LoginNoHpScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Masuk',
+                  'Masuk dengan No HP',
                   style: GoogleFonts.poppins(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
@@ -51,24 +52,30 @@ class LoginNoHpScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: controller.phoneController,
+                  keyboardType: TextInputType.phone,
                   validator: (val) {
                     if (val!.isEmpty) {
                       showErrorDialog('No HP tidak boleh kosong!');
+                      return '';
+                    }
+                    if (val.length < 10) {
+                      showErrorDialog('No HP tidak valid!');
+                      return '';
                     }
                     return null;
                   },
                   decoration: InputDecoration(
                     hintText: '08123xxx',
-                    prefixIcon: Icon(
-                      Icons.phone_android,
-                    ),
+                    prefixIcon: Icon(Icons.phone_android, color: Colors.grey[500]),
                   ),
                 ),
                 const SizedBox(height: 20),
                 DefaultButton(
                   text: 'Login',
                   press: () {
-                    controller.requestOtp();
+                    if (form.currentState!.validate()) {
+                      controller.requestOtp();
+                    }
                   },
                   color: primary,
                 ),
@@ -76,7 +83,7 @@ class LoginNoHpScreen extends StatelessWidget {
                 DefaultButtonOutline(
                   text: 'Login dengan Email',
                   press: () {
-                    Get.off(LoginScreen());
+                    Get.off(() => const LoginScreen());
                   },
                 ),
                 const SizedBox(height: 20),
@@ -86,9 +93,7 @@ class LoginNoHpScreen extends StatelessWidget {
                     const Text('Anda belum punya akun?'),
                     TextButton(
                       onPressed: () {
-                        Get.to(
-                          const RegisterScreen(),
-                        );
+                        Get.to(() => const RegisterScreen());
                       },
                       child: const Text('Register'),
                     ),

@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:mobile_supportyou/models/transaksi_model.dart';
 import 'package:mobile_supportyou/services/profil_service.dart';
-import 'package:mobile_supportyou/views/login_nohp_screen/screen.dart';
+import 'package:mobile_supportyou/views/login_screen/screen.dart';
 
 class ProfilController extends GetxController {
   final ProfilService _profilService = ProfilService();
@@ -162,7 +162,7 @@ class ProfilController extends GetxController {
     _storage.remove('default_address_id');
     
     // Navigate ke login screen
-    Get.offAll(() => const LoginNoHpScreen());
+    Get.offAll(() => const LoginScreen());
   }
   
   void editProfile() {

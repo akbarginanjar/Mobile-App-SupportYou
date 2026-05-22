@@ -3,15 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/models/payment_model.dart';
+import 'package:mobile_supportyou/utils/value_formatter.dart';
 
 class MetodePembayaranScreen extends StatelessWidget {
   final List<PaymentGroup> paymentGroups;
   final PaymentMethod? selectedMethod;
+  final int pelatihanHarga;
   
   const MetodePembayaranScreen({
     super.key,
     required this.paymentGroups,
     this.selectedMethod,
+    required this.pelatihanHarga,
   });
 
   @override
@@ -93,20 +96,23 @@ class MetodePembayaranScreen extends StatelessWidget {
                                   fontSize: 14,
                                 ),
                               ),
-                              if (method.number != null)
-                                Text(
-                                  'No. Rekening: ${method.number}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              if (method.description != null)
-                                Text(
-                                  method.description!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
+                              if (method.fee != null && method.fee! > 0)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.info_outline, size: 12, color: Colors.grey[500]),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          _getFeeText(method, pelatihanHarga),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                             ],
@@ -114,6 +120,32 @@ class MetodePembayaranScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    subtitle: method.number != null || method.description != null
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (method.number != null)
+                                  Text(
+                                    'No. Rekening: ${method.number}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                if (method.description != null)
+                                  Text(
+                                    method.description!,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          )
+                        : null,
                     value: method,
                     groupValue: selectedMethod,
                     onChanged: (value) {
@@ -128,5 +160,14 @@ class MetodePembayaranScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  String _getFeeText(PaymentMethod method, int pelatihanHarga) {
+    if (method.feeType == 'percentage') {
+      final feeAmount = (pelatihanHarga * (method.feeValue ?? 0) / 100).floor();
+      return 'Biaya tambahan + ${method.feeValue}% (${Formatter.formatCurrency(feeAmount)})';
+    } else {
+      return 'Biaya tambahan + ${Formatter.formatCurrency(method.feeValue ?? 0)}';
+    }
   }
 }

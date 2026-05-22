@@ -1,3 +1,4 @@
+// lib/controllers/checkout_controller.dart
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
@@ -229,16 +230,18 @@ class CheckoutController extends GetxController {
   Future<void> selectPaymentMethod() async {
     if (paymentGroups.isEmpty) return;
     
+    final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
+    
     final result = await Get.to(() => MetodePembayaranScreen(
           paymentGroups: paymentGroups,
           selectedMethod: selectedPaymentMethod.value,
+          pelatihanHarga: basePrice,
         ));
     
     if (result != null && result is PaymentMethod) {
       selectedPaymentMethod.value = result;
       
       if (result.feeType == 'percentage') {
-        final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
         paymentGatewayFeeType.value = 'percentage';
         paymentGatewayFeeValue.value = result.feeValue ?? 0;
         paymentGatewayFee.value = (basePrice * (result.feeValue ?? 0) / 100).floor();
@@ -327,159 +330,159 @@ class CheckoutController extends GetxController {
     return 'bank_transfer';
   }
   
-Future<void> processCheckout() async {
-  debugPrint('═══════════════════════════════════════════════════════════');
-  debugPrint('🛒 PROCESSING CHECKOUT');
-  debugPrint('═══════════════════════════════════════════════════════════');
-  
-  if (selectedPaymentMethod.value == null) {
-    debugPrint('❌ No payment method selected');
-    Get.snackbar(
-      'Peringatan',
-      'Silakan pilih metode pembayaran terlebih dahulu',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.orange,
-      colorText: Colors.white,
-    );
-    return;
-  }
-  
-  if (konsumenMemberId.value == 0) {
-    debugPrint('❌ Member ID is 0, cannot proceed');
-    Get.snackbar(
-      'Error',
-      'Data member tidak ditemukan. Silakan login kembali.',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-    );
-    return;
-  }
-  
-  final method = selectedPaymentMethod.value!;
-  
-  debugPrint('Selected payment method: ${method.name}');
-  debugPrint('Payment code: ${method.code}');
-  debugPrint('Payment type: ${method.type}');
-  debugPrint('Member ID (konsumen_member_id): ${konsumenMemberId.value}');
-  debugPrint('Address ID: ${konsumenMemberAlamatId.value}');
-  debugPrint('Product type: ${pelatihan.type}');
-  
-  isProcessing.value = true;
-  
-  try {
-    final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
-    final tokoMemberId = pelatihan.mitra?.memberId ?? pelatihan.tokoMemberId ?? 0;
-    
-    String transactionType;
-    Map<String, dynamic> itemData;
-    
-    int finalPrice;
-    int uangMasuk;
-    
-    if (paymentGatewayFee.value > 0) {
-      finalPrice = basePrice + paymentGatewayFee.value;
-      uangMasuk = finalPrice;
-    } else {
-      finalPrice = basePrice;
-      uangMasuk = basePrice;
-    }
-    
-    if (pelatihan.type == 'ebook') {
-      transactionType = 'barang';
-      itemData = {
-        'barang_id': pelatihan.id,
-        'qty': 1,
-        'harga': finalPrice,
-      };
-      debugPrint('📦 Processing as EBOOK with transaction_type: $transactionType');
-    } else {
-      transactionType = 'pelatihan';
-      itemData = {
-        'pelatihan_id': pelatihan.id,
-        'qty': 1,
-        'harga': finalPrice,
-      };
-      debugPrint('📦 Processing as PELATIHAN with transaction_type: $transactionType');
-    }
-    
-    final metodeBayar = _getMetodeBayar(method);
-    final paymentType = _getPaymentType(method);
-    
-    debugPrint('💰 Base Price: $basePrice');
-    debugPrint('💰 Final Price (with PG fee): $finalPrice');
-    debugPrint('💰 Uang Masuk (gross_amount): $uangMasuk');
-    debugPrint('💰 Toko Member ID: $tokoMemberId');
-    debugPrint('💰 Discount Amount: ${discountAmount.value}');
-    debugPrint('💰 Payment Gateway Fee: ${paymentGatewayFee.value}');
-    debugPrint('💰 Total Price (UI): ${totalPrice.value}');
-    
-    final checkoutData = {
-      'konsumen_member_id': konsumenMemberId.value,
-      'konsumen_member_alamat_id': konsumenMemberAlamatId.value,
-      'toko_member_id': tokoMemberId,
-      'uang_masuk': uangMasuk,
-      'ongkir': 0,
-      'biaya_layanan': serviceFee.value,
-      'biaya_aplikasi': appFee.value,
-      'items': [itemData],
-      'metode_bayar': metodeBayar,
-      'payment_code': method.code,
-      'payment_type': paymentType,
-      'transaction_type': transactionType,
-    };
-    
-    if (selectedDiscount.value != null) {
-      checkoutData['event_diskon_ids'] = [selectedDiscount.value!.id];
-      debugPrint('📦 Added event_diskon_ids: [${selectedDiscount.value!.id}]');
-    }
-    
-    debugPrint('📦 Checkout Payload: ${jsonEncode(checkoutData)}');
-    
-    final response = await _paymentService.createCheckout(checkoutData);
-    
-    debugPrint('📥 RESPONSE: Checkout');
-    debugPrint('Body: $response');
-    
-    if (response != null && response['id'] != null) {
-      debugPrint('✅ Checkout successful!');
-      debugPrint('Transaction ID: ${response['id']}');
-      debugPrint('No Invoice: ${response['no_invoice']}');
-      
-      Get.snackbar(
-        'Sukses',
-        'Pesanan berhasil dibuat',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-      );
-      
-      Get.to(() => PembayaranScreen(
-            idTransaksi: response['id'],
-            pelatihan: pelatihan,
-            discountAmount: discountAmount.value.toDouble(),
-            discountName: selectedDiscount.value?.name,
-          ));
-    } else {
-      throw Exception(response?['message'] ?? 'Gagal memproses pesanan');
-    }
-    
-  } catch (e) {
-    debugPrint('❌ Error processing checkout: $e');
-    Get.snackbar(
-      'Error',
-      'Gagal memproses pesanan: ${e.toString().replaceFirst('Exception: ', '')}',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-      duration: const Duration(seconds: 3),
-    );
-  } finally {
-    isProcessing.value = false;
+  Future<void> processCheckout() async {
     debugPrint('═══════════════════════════════════════════════════════════');
+    debugPrint('🛒 PROCESSING CHECKOUT');
+    debugPrint('═══════════════════════════════════════════════════════════');
+    
+    if (selectedPaymentMethod.value == null) {
+      debugPrint('❌ No payment method selected');
+      Get.snackbar(
+        'Peringatan',
+        'Silakan pilih metode pembayaran terlebih dahulu',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    
+    if (konsumenMemberId.value == 0) {
+      debugPrint('❌ Member ID is 0, cannot proceed');
+      Get.snackbar(
+        'Error',
+        'Data member tidak ditemukan. Silakan login kembali.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    
+    final method = selectedPaymentMethod.value!;
+    
+    debugPrint('Selected payment method: ${method.name}');
+    debugPrint('Payment code: ${method.code}');
+    debugPrint('Payment type: ${method.type}');
+    debugPrint('Member ID (konsumen_member_id): ${konsumenMemberId.value}');
+    debugPrint('Address ID: ${konsumenMemberAlamatId.value}');
+    debugPrint('Product type: ${pelatihan.type}');
+    
+    isProcessing.value = true;
+    
+    try {
+      final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
+      final tokoMemberId = pelatihan.mitra?.memberId ?? pelatihan.tokoMemberId ?? 0;
+      
+      String transactionType;
+      Map<String, dynamic> itemData;
+      
+      int finalPrice;
+      int uangMasuk;
+      
+      if (paymentGatewayFee.value > 0) {
+        finalPrice = basePrice + paymentGatewayFee.value;
+        uangMasuk = finalPrice;
+      } else {
+        finalPrice = basePrice;
+        uangMasuk = basePrice;
+      }
+      
+      if (pelatihan.type == 'ebook') {
+        transactionType = 'barang';
+        itemData = {
+          'barang_id': pelatihan.id,
+          'qty': 1,
+          'harga': finalPrice,
+        };
+        debugPrint('📦 Processing as EBOOK with transaction_type: $transactionType');
+      } else {
+        transactionType = 'pelatihan';
+        itemData = {
+          'pelatihan_id': pelatihan.id,
+          'qty': 1,
+          'harga': finalPrice,
+        };
+        debugPrint('📦 Processing as PELATIHAN with transaction_type: $transactionType');
+      }
+      
+      final metodeBayar = _getMetodeBayar(method);
+      final paymentType = _getPaymentType(method);
+      
+      debugPrint('💰 Base Price: $basePrice');
+      debugPrint('💰 Final Price (with PG fee): $finalPrice');
+      debugPrint('💰 Uang Masuk (gross_amount): $uangMasuk');
+      debugPrint('💰 Toko Member ID: $tokoMemberId');
+      debugPrint('💰 Discount Amount: ${discountAmount.value}');
+      debugPrint('💰 Payment Gateway Fee: ${paymentGatewayFee.value}');
+      debugPrint('💰 Total Price (UI): ${totalPrice.value}');
+      
+      final checkoutData = {
+        'konsumen_member_id': konsumenMemberId.value,
+        'konsumen_member_alamat_id': konsumenMemberAlamatId.value,
+        'toko_member_id': tokoMemberId,
+        'uang_masuk': uangMasuk,
+        'ongkir': 0,
+        'biaya_layanan': serviceFee.value,
+        'biaya_aplikasi': appFee.value,
+        'items': [itemData],
+        'metode_bayar': metodeBayar,
+        'payment_code': method.code,
+        'payment_type': paymentType,
+        'transaction_type': transactionType,
+      };
+      
+      if (selectedDiscount.value != null) {
+        checkoutData['event_diskon_ids'] = [selectedDiscount.value!.id];
+        debugPrint('📦 Added event_diskon_ids: [${selectedDiscount.value!.id}]');
+      }
+      
+      debugPrint('📦 Checkout Payload: ${jsonEncode(checkoutData)}');
+      
+      final response = await _paymentService.createCheckout(checkoutData);
+      
+      debugPrint('📥 RESPONSE: Checkout');
+      debugPrint('Body: $response');
+      
+      if (response != null && response['id'] != null) {
+        debugPrint('✅ Checkout successful!');
+        debugPrint('Transaction ID: ${response['id']}');
+        debugPrint('No Invoice: ${response['no_invoice']}');
+        
+        Get.snackbar(
+          'Sukses',
+          'Pesanan berhasil dibuat',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+        
+        Get.to(() => PembayaranScreen(
+              idTransaksi: response['id'],
+              pelatihan: pelatihan,
+              discountAmount: discountAmount.value.toDouble(),
+              discountName: selectedDiscount.value?.name,
+            ));
+      } else {
+        throw Exception(response?['message'] ?? 'Gagal memproses pesanan');
+      }
+      
+    } catch (e) {
+      debugPrint('❌ Error processing checkout: $e');
+      Get.snackbar(
+        'Error',
+        'Gagal memproses pesanan: ${e.toString().replaceFirst('Exception: ', '')}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    } finally {
+      isProcessing.value = false;
+      debugPrint('═══════════════════════════════════════════════════════════');
+    }
   }
-}
   
   Future<void> getInvoice(int? idTransaksi) async {
     if (idTransaksi == null) return;

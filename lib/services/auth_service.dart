@@ -127,6 +127,27 @@ class AuthService extends GetConnect {
     }
   }
 
+  Future<Response> requestForgotPassword(String email) async {
+    try {
+      EasyLoading.show(status: 'Mengirim link reset password...');
+      final body = {"email": email};
+      final response = await post('${Base.url}/v1/auth/request-forgot-password', body, headers: _headers);
+      EasyLoading.dismiss();
+      
+      print('═══════════════════════════════════════════════════════════');
+      print('🔐 FORGOT PASSWORD RESPONSE');
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      print('═══════════════════════════════════════════════════════════');
+      
+      return response;
+    } catch (e) {
+      EasyLoading.dismiss();
+      _handleError(e);
+      return const Response(statusCode: 500, body: {"message": "Gagal mengirim link reset password"});
+    }
+  }
+
   /// Helper simpan session - DIPERBAIKI
   void _saveSession(dynamic responseBody) {
     print('═══════════════════════════════════════════════════════════');

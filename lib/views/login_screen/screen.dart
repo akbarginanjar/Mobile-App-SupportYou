@@ -1,3 +1,4 @@
+// lib/views/login_screen/screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -9,6 +10,7 @@ import 'package:mobile_supportyou/services/auth_service.dart';
 import 'package:mobile_supportyou/views/login_nohp_screen/screen.dart';
 import 'package:mobile_supportyou/views/register_screen/screen.dart';
 import 'package:mobile_supportyou/views/main_screen/screen.dart';
+import 'package:mobile_supportyou/views/forgot_password_screen/screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController password = TextEditingController();
   AuthService authService = AuthService();
   final GlobalKey<FormState> form = GlobalKey<FormState>();
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,41 +62,41 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: email,
+                  keyboardType: TextInputType.emailAddress,
                   validator: (val) {
                     if (val!.isEmpty) {
-                      showErrorDialog(
-                        'Email atau Password tidak boleh kosong!',
-                      );
+                      showErrorDialog('Email tidak boleh kosong!');
+                      return '';
+                    }
+                    if (!GetUtils.isEmail(val)) {
+                      showErrorDialog('Format email tidak valid!');
+                      return '';
                     }
                     return null;
                   },
                   decoration: InputDecoration(
                     hintText: 'Email',
-                    prefixIcon: Icon(Icons.person, color: Colors.grey[500]),
+                    prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[500]),
                   ),
                 ),
-                const SizedBox(height: 10,),
+                const SizedBox(height: 10),
                 TextFormField(
                   controller: password,
                   obscureText: _obscureText,
                   validator: (val) {
                     if (val!.isEmpty) {
-                      showErrorDialog(
-                        'Email atau Password tidak boleh kosong!',
-                      );
+                      showErrorDialog('Password tidak boleh kosong!');
+                      return '';
                     }
                     return null;
                   },
                   decoration: InputDecoration(
                     hintText: 'Password',
-                    prefixIcon: Icon(
-                      Icons.lock_outline,
-                    ),
+                    prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[500]),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureText
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                        _obscureText ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey[500],
                       ),
                       onPressed: () {
                         setState(() {
@@ -103,7 +106,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      Get.to(() => const ForgotPasswordScreen());
+                    },
+                    child: Text(
+                      'Lupa Password?',
+                      style: TextStyle(
+                        color: primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 DefaultButton(
                   text: 'Login',
                   press: () {
@@ -127,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 DefaultButtonOutline(
                   text: 'Login dengan No HP',
                   press: () {
-                    Get.off(LoginNoHpScreen());
+                    Get.to(() => const LoginNoHpScreen());
                   },
                 ),
                 const SizedBox(height: 20),
@@ -137,9 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text('Anda belum punya akun?'),
                     TextButton(
                       onPressed: () {
-                        Get.to(
-                          const RegisterScreen(),
-                        );
+                        Get.to(() => const RegisterScreen());
                       },
                       child: const Text('Register'),
                     ),
