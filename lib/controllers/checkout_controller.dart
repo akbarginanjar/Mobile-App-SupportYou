@@ -388,24 +388,6 @@ class CheckoutController extends GetxController {
         uangMasuk = basePrice;
       }
       
-      if (pelatihan.type == 'ebook') {
-        transactionType = 'barang';
-        itemData = {
-          'barang_id': pelatihan.id,
-          'qty': 1,
-          'harga': finalPrice,
-        };
-        debugPrint('📦 Processing as EBOOK with transaction_type: $transactionType');
-      } else {
-        transactionType = 'pelatihan';
-        itemData = {
-          'pelatihan_id': pelatihan.id,
-          'qty': 1,
-          'harga': finalPrice,
-        };
-        debugPrint('📦 Processing as PELATIHAN with transaction_type: $transactionType');
-      }
-      
       final metodeBayar = _getMetodeBayar(method);
       final paymentType = _getPaymentType(method);
       
@@ -417,24 +399,68 @@ class CheckoutController extends GetxController {
       debugPrint('💰 Payment Gateway Fee: ${paymentGatewayFee.value}');
       debugPrint('💰 Total Price (UI): ${totalPrice.value}');
       
-      final checkoutData = {
-        'konsumen_member_id': konsumenMemberId.value,
-        'konsumen_member_alamat_id': konsumenMemberAlamatId.value,
-        'toko_member_id': tokoMemberId,
-        'uang_masuk': uangMasuk,
-        'ongkir': 0,
-        'biaya_layanan': serviceFee.value,
-        'biaya_aplikasi': appFee.value,
-        'items': [itemData],
-        'metode_bayar': metodeBayar,
-        'payment_code': method.code,
-        'payment_type': paymentType,
-        'transaction_type': transactionType,
-      };
+      Map<String, dynamic> checkoutData;
       
-      if (selectedDiscount.value != null) {
-        checkoutData['event_diskon_ids'] = [selectedDiscount.value!.id];
-        debugPrint('📦 Added event_diskon_ids: [${selectedDiscount.value!.id}]');
+      if (pelatihan.type == 'ebook') {
+        transactionType = 'pelatihan';
+        itemData = {
+          'pelatihan_id': pelatihan.id,
+          'qty': 1,
+          'harga': basePrice,
+          'type': 'ebook',
+        };
+        debugPrint('📦 Processing as EBOOK with transaction_type: $transactionType');
+        
+        checkoutData = {
+          'konsumen_member_id': konsumenMemberId.value,
+          'toko_member_id': tokoMemberId,
+          'uang_masuk': basePrice,
+          'biaya_layanan': serviceFee.value + paymentGatewayFee.value,
+          'biaya_aplikasi': appFee.value,
+          'biaya_payment_method': paymentGatewayFee.value,
+          'items': [itemData],
+          'metode_bayar': metodeBayar,
+          'payment_code': method.code,
+          'payment_type': paymentType,
+          'transaction_type': transactionType,
+        };
+        
+        if (discountAmount.value > 0) {
+          checkoutData['diskon_nominal'] = discountAmount.value;
+        }
+        
+        if (selectedDiscount.value != null) {
+          checkoutData['event_diskon_ids'] = [selectedDiscount.value!.id];
+        }
+        
+        checkoutData['total_bayar'] = basePrice + serviceFee.value + paymentGatewayFee.value + appFee.value - discountAmount.value;
+      } else {
+        transactionType = 'pelatihan';
+        itemData = {
+          'pelatihan_id': pelatihan.id,
+          'qty': 1,
+          'harga': finalPrice,
+        };
+        debugPrint('📦 Processing as PELATIHAN with transaction_type: $transactionType');
+        
+        checkoutData = {
+          'konsumen_member_id': konsumenMemberId.value,
+          'konsumen_member_alamat_id': konsumenMemberAlamatId.value,
+          'toko_member_id': tokoMemberId,
+          'uang_masuk': uangMasuk,
+          'ongkir': 0,
+          'biaya_layanan': serviceFee.value,
+          'biaya_aplikasi': appFee.value,
+          'items': [itemData],
+          'metode_bayar': metodeBayar,
+          'payment_code': method.code,
+          'payment_type': paymentType,
+          'transaction_type': transactionType,
+        };
+        
+        if (selectedDiscount.value != null) {
+          checkoutData['event_diskon_ids'] = [selectedDiscount.value!.id];
+        }
       }
       
       debugPrint('📦 Checkout Payload: ${jsonEncode(checkoutData)}');

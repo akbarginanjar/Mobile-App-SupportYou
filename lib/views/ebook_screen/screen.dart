@@ -54,7 +54,6 @@ class _EbookScreenState extends State<EbookScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Cover Image dengan gradient overlay
               Stack(
                 children: [
                   Container(
@@ -96,7 +95,6 @@ class _EbookScreenState extends State<EbookScreen> {
                       ),
                     ),
                   ),
-                  // Badge Type E-Book di pojok kiri atas
                   Positioned(
                     top: 20,
                     left: 20,
@@ -136,7 +134,6 @@ class _EbookScreenState extends State<EbookScreen> {
                       ),
                     ),
                   ),
-                  // Info harga di overlay
                   Positioned(
                     bottom: 20,
                     right: 20,
@@ -165,14 +162,11 @@ class _EbookScreenState extends State<EbookScreen> {
                   ),
                 ],
               ),
-              
-              // Content Container
               Container(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title
                     Text(
                       ebook.nama ?? '-',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -181,8 +175,6 @@ class _EbookScreenState extends State<EbookScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
-                    // Info E-Book dengan desain card
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -199,7 +191,6 @@ class _EbookScreenState extends State<EbookScreen> {
                       ),
                       child: Column(
                         children: [
-                          // Penulis
                           Row(
                             children: [
                               Container(
@@ -236,15 +227,12 @@ class _EbookScreenState extends State<EbookScreen> {
                               ),
                             ],
                           ),
-                          
                           const SizedBox(height: 16),
                           Container(
                             height: 1,
                             color: Colors.grey[200],
                           ),
                           const SizedBox(height: 16),
-                          
-                          // Penerbit
                           Row(
                             children: [
                               Container(
@@ -281,15 +269,12 @@ class _EbookScreenState extends State<EbookScreen> {
                               ),
                             ],
                           ),
-                          
                           const SizedBox(height: 16),
                           Container(
                             height: 1,
                             color: Colors.grey[200],
                           ),
                           const SizedBox(height: 16),
-                          
-                          // Tahun Terbit dan Jumlah Halaman dalam satu baris
                           Row(
                             children: [
                               Expanded(
@@ -373,15 +358,12 @@ class _EbookScreenState extends State<EbookScreen> {
                               ),
                             ],
                           ),
-                          
                           const SizedBox(height: 16),
                           Container(
                             height: 1,
                             color: Colors.grey[200],
                           ),
                           const SizedBox(height: 16),
-                          
-                          // ISBN
                           Row(
                             children: [
                               Container(
@@ -421,10 +403,7 @@ class _EbookScreenState extends State<EbookScreen> {
                         ],
                       ),
                     ),
-                    
                     const SizedBox(height: 24),
-                    
-                    // Info Cards (Tipe, Status, dll)
                     Row(
                       children: [
                         Expanded(
@@ -455,10 +434,7 @@ class _EbookScreenState extends State<EbookScreen> {
                         ),
                       ],
                     ),
-                    
                     const SizedBox(height: 30),
-                    
-                    // Deskripsi Section
                     if (ebook.deskripsi.isNotEmpty)
                       _buildModernSection(
                         context,
@@ -466,7 +442,6 @@ class _EbookScreenState extends State<EbookScreen> {
                         title: "Deskripsi E-Book",
                         body: ebook.deskripsi,
                       ),
-                    
                     const SizedBox(height: 30),
                   ],
                 ),
@@ -475,8 +450,6 @@ class _EbookScreenState extends State<EbookScreen> {
           ),
         );
       }),
-      
-      // Bottom Button
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -491,7 +464,6 @@ class _EbookScreenState extends State<EbookScreen> {
         ),
         child: SafeArea(
           child: Obx(() {
-            // Cek apakah ebook sedang dimuat atau null
             if (controller.isLoadingDetail.value || controller.detailEbook.value == null) {
               return ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -517,7 +489,6 @@ class _EbookScreenState extends State<EbookScreen> {
             
             final ebook = controller.detailEbook.value!;
             
-            // Konversi Ebook ke Pelatihan untuk checkout
             final pelatihan = Pelatihan(
               id: ebook.id,
               nama: ebook.nama,
@@ -531,10 +502,15 @@ class _EbookScreenState extends State<EbookScreen> {
               type: 'ebook',
               typePelatihan: null,
               maxPeserta: null,
-              mitra: null,
+              mitra: Mitra(
+                id: 81,
+                nama: 'SupportYou Education',
+                memberId: 81,
+              ),
               sections: [],
               testimonials: [],
               speaker: null,
+              tokoMemberId: 81,
               penulis: ebook.penulis,
               penerbit: ebook.penerbit,
               tahunTerbit: ebook.tahunTerbit,
@@ -570,7 +546,6 @@ class _EbookScreenState extends State<EbookScreen> {
     );
   }
   
-  // Info Card
   Widget _buildInfoCard(BuildContext context, 
       {required IconData icon, required String label, required String value}) {
     return Container(
@@ -608,7 +583,6 @@ class _EbookScreenState extends State<EbookScreen> {
     );
   }
 
-  // Modern Section dengan desain card
   Widget _buildModernSection(BuildContext context,
       {required IconData icon, required String title, required String body}) {
     return Container(

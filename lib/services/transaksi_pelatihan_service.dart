@@ -28,10 +28,9 @@ class TransaksiPelatihanService extends GetConnect {
     
     print('URL: $url');
     
-    // 🔥 PERBAIKI HEADER: Gunakan header yang sama dengan web
     final headers = {
       'secret': 'aKndsan23928h98hKJbkjwlKHD9dsbjwiobqUJGHBDWHvkHSJQUBSQOPSAJHVwoihdapq',
-      'author': 'bearer $tokens',  // Perhatikan: 'author' bukan 'Authorization'
+      'author': 'bearer $tokens',
       'device': 'mobile',
     };
     
@@ -78,8 +77,6 @@ class TransaksiPelatihanService extends GetConnect {
       print('❌ HTTP Error ${conn.statusCode}: $errorMessage');
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       
-      // Jangan tampilkan snackbar untuk setiap error agar tidak mengganggu
-      // Get.snackbar('Error Transaksi Pelatihan $status', errorMessage);
       throw Exception(errorMessage);
     }
   }

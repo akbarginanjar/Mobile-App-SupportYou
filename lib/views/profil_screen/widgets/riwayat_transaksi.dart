@@ -4,10 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/riwayat_pelatihan_controller.dart';
-import 'package:mobile_supportyou/controllers/ebook_controller.dart';
+import 'package:mobile_supportyou/controllers/riwayat_ebook_controller.dart';
 import 'package:mobile_supportyou/models/riwayat_pelatihan_model.dart';
-import 'package:mobile_supportyou/models/ebook_model.dart';
+import 'package:mobile_supportyou/models/ebook_dibeli_model.dart';
 import 'package:mobile_supportyou/utils/date_formatter.dart';
+import 'package:mobile_supportyou/utils/value_formatter.dart';
 
 class RiwayatTransaksi extends StatelessWidget {
   final RiwayatPelatihanController pelatihanController;
@@ -16,7 +17,7 @@ class RiwayatTransaksi extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final EbookController ebookController = Get.find<EbookController>();
+    final RiwayatEbookController ebookController = Get.put(RiwayatEbookController());
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -84,7 +85,7 @@ class RiwayatTransaksi extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                selectedTab == 0 ? _buildPelatihanList() : _buildEbookPlaceholder(),
+                selectedTab == 0 ? _buildPelatihanList() : _buildEbookList(),
               ],
             );
           }),
@@ -383,33 +384,225 @@ class RiwayatTransaksi extends StatelessWidget {
     );
   }
   
-  Widget _buildEbookPlaceholder() {
-    return const Center(
+  Widget _buildEbookList() {
+    final RiwayatEbookController controller = Get.find<RiwayatEbookController>();
+    
+    return Obx(() {
+      if (controller.isLoading.value && controller.ebookList.isEmpty) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Column(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Memuat riwayat ebook...'),
+              ],
+            ),
+          ),
+        );
+      }
+      
+      if (controller.ebookList.isEmpty) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.menu_book, size: 48, color: Colors.grey),
+                SizedBox(height: 12),
+                Text(
+                  'Belum ada ebook yang dibeli',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Yuk, beli ebook pertama kamu sekarang!',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      
+      final displayList = controller.ebookList.length > 2
+          ? controller.ebookList.take(2).toList()
+          : controller.ebookList.toList();
+      
+      return Column(
+        children: displayList.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          return Column(
+            children: [
+              _buildEbookItem(item),
+              if (index != displayList.length - 1) const Divider(),
+            ],
+          );
+        }).toList(),
+      );
+    });
+  }
+  
+  Widget _buildEbookItem(EbookDibeli item) {
+    return InkWell(
+      onTap: () => Get.find<RiwayatEbookController>().goToDetail(item),
+      borderRadius: BorderRadius.circular(12),
+      splashColor: info.withValues(alpha: 0.1),
+      highlightColor: info.withValues(alpha: 0.05),
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.menu_book,
-              size: 48,
-              color: Colors.grey,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.nama,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[400],
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              item.penulis ?? 'Penulis tidak tersedia',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: success.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: success.withValues(alpha: 0.3),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle, size: 14, color: success),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Dibeli',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: success,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 12),
-            Text(
-              'Belum ada ebook yang dibeli',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: info.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.menu_book,
+                    size: 16,
+                    color: info,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ebook Digital',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: info,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.penerbit ?? 'Penerbit tidak tersedia',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[500],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.book, size: 14, color: Colors.grey[500]),
+                const SizedBox(width: 6),
+                Text(
+                  '${item.jumlahHalaman ?? 0} halaman',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[500],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(Icons.calendar_today, size: 12, color: Colors.grey[500]),
+                const SizedBox(width: 6),
+                Text(
+                  item.tahunTerbit?.toString() ?? '-',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
             Text(
-              'Yuk, beli ebook pertama kamu sekarang!',
+              Formatter.formatCurrency(item.hargaFinal ?? item.harga),
               style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: primary,
               ),
             ),
           ],
