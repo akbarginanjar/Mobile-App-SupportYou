@@ -1,4 +1,3 @@
-// lib/controllers/riwayat_pelatihan_controller.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -10,9 +9,14 @@ import 'package:mobile_supportyou/views/detail_pelatihan_dibeli/screen.dart';
 class RiwayatPelatihanController extends GetxController {
   final RiwayatPelatihanService _riwayatService = RiwayatPelatihanService();
   
-  final currentTab = 0.obs;
   final isLoading = false.obs;
+  final isLoadingMore = false.obs;
   final pelatihanList = <PelatihanDibeli>[].obs;
+  var currentPage = 0;
+  var hasMoreData = true;
+  final int limit = 10;
+  
+  final currentTab = 0.obs;
 
   @override
   void onInit() {
@@ -20,17 +24,45 @@ class RiwayatPelatihanController extends GetxController {
     loadPelatihanDibeli();
   }
   
-  Future<void> loadPelatihanDibeli() async {
-    try {
+  Future<void> loadPelatihanDibeli({bool reset = true}) async {
+    if (reset) {
+      currentPage = 0;
+      hasMoreData = true;
+      pelatihanList.clear();
       isLoading.value = true;
-      final result = await _riwayatService.getPelatihanDibeli();
-      pelatihanList.assignAll(result);
-      debugPrint('Loaded ${result.length} purchased pelatihan');
+    }
+    
+    try {
+      final result = await _riwayatService.getPelatihanDibeliPaginated(
+        start: currentPage * limit,
+        length: limit,
+      );
+      
+      if (result.isEmpty) {
+        hasMoreData = false;
+      } else {
+        if (reset) {
+          pelatihanList.assignAll(result);
+        } else {
+          pelatihanList.addAll(result);
+        }
+        currentPage++;
+        hasMoreData = result.length >= limit;
+      }
+      debugPrint('Loaded ${pelatihanList.length} purchased pelatihan');
     } catch (e) {
       debugPrint('Error loading pelatihan: $e');
-      pelatihanList.clear();
+      if (reset) pelatihanList.clear();
     } finally {
-      isLoading.value = false;
+      if (reset) isLoading.value = false;
+    }
+  }
+  
+  Future<void> loadMore() async {
+    if (!isLoadingMore.value && hasMoreData && !isLoading.value) {
+      isLoadingMore.value = true;
+      await loadPelatihanDibeli(reset: false);
+      isLoadingMore.value = false;
     }
   }
   
@@ -71,9 +103,9 @@ class RiwayatPelatihanController extends GetxController {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: theme.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: theme.withValues(alpha: 0.2)),
               ),
               child: SelectableText(
                 kodeAkses,
@@ -111,7 +143,7 @@ class RiwayatPelatihanController extends GetxController {
       'Berhasil',
       'Kode akses disalin',
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
+      backgroundColor: success,
       colorText: Colors.white,
       duration: const Duration(seconds: 2),
     );

@@ -1,4 +1,3 @@
-// lib/views/profil_screen/screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
@@ -8,7 +7,7 @@ import 'package:mobile_supportyou/views/profil_screen/widgets/riwayat_transaksi.
 import 'package:mobile_supportyou/views/profil_screen/widgets/akun_info.dart';
 import 'package:mobile_supportyou/controllers/profil_controller.dart';
 import 'package:mobile_supportyou/controllers/riwayat_pelatihan_controller.dart';
-import 'package:mobile_supportyou/controllers/ebook_controller.dart';
+import 'package:mobile_supportyou/controllers/riwayat_ebook_controller.dart';
 import 'package:mobile_supportyou/views/profil_screen/edit_profil.dart';
 import 'package:mobile_supportyou/views/profil_screen/ganti_password.dart';
 
@@ -19,17 +18,15 @@ class ProfilScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final ProfilController controller = Get.put(ProfilController());
     final RiwayatPelatihanController riwayatController = Get.put(RiwayatPelatihanController());
-    final EbookController ebookController = Get.put(EbookController());
-    
-    ebookController.loadEbookHome();
+    final RiwayatEbookController ebookController = Get.put(RiwayatEbookController());
     
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.withValues(alpha: 0.95),
       body: RefreshIndicator(
         onRefresh: () async {
           await controller.refreshData();
           await riwayatController.refreshData();
-          await ebookController.refreshHome();
+          await ebookController.refreshData();
         },
         color: primary,
         child: CustomScrollView(
@@ -64,7 +61,7 @@ class ProfilScreen extends StatelessWidget {
                     if (result == true) {
                       controller.refreshData();
                       riwayatController.refreshData();
-                      ebookController.refreshHome();
+                      ebookController.refreshData();
                     }
                   },
                 ),
@@ -83,7 +80,7 @@ class ProfilScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 _buildMenuButtons(context),
                 const SizedBox(height: 16),
-                RiwayatTransaksi(pelatihanController: riwayatController),
+                const RiwayatTransaksi(),
                 const SizedBox(height: 80),
               ]),
             ),
@@ -98,11 +95,11 @@ class ProfilScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: textTheme.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -120,7 +117,7 @@ class ProfilScreen extends StatelessWidget {
               if (result == true) {
                 Get.find<ProfilController>().refreshData();
                 Get.find<RiwayatPelatihanController>().refreshData();
-                Get.find<EbookController>().refreshHome();
+                Get.find<RiwayatEbookController>().refreshData();
               }
             },
           ),
@@ -137,8 +134,8 @@ class ProfilScreen extends StatelessWidget {
                   'Berhasil',
                   'Password berhasil diubah',
                   snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.green,
-                  colorText: Colors.white,
+                  backgroundColor: success,
+                  colorText: theme,
                 );
               }
             },
@@ -187,14 +184,14 @@ class ProfilScreen extends StatelessWidget {
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
+                      color: textTheme.withValues(alpha: 0.6),
                       fontSize: 11,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+            Icon(Icons.chevron_right, color: textTheme.withValues(alpha: 0.4), size: 20),
           ],
         ),
       ),
@@ -210,7 +207,7 @@ class ProfilScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: Text('Batal', style: TextStyle(color: Colors.grey[600])),
+            child: Text('Batal', style: TextStyle(color: textTheme.withValues(alpha: 0.6))),
           ),
           ElevatedButton(
             onPressed: () {
@@ -218,7 +215,7 @@ class ProfilScreen extends StatelessWidget {
               controller.logout();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: danger,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
