@@ -4,7 +4,6 @@ import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/pelatihan_controller.dart';
 import 'package:mobile_supportyou/views/widgets/produk_card.dart';
 import 'package:mobile_supportyou/views/widgets/produk_skeleton.dart';
-import 'package:mobile_supportyou/views/widgets/pelatihan_card.dart';
 import 'package:mobile_supportyou/views/semua_pelatihan_screen/screen.dart';
 
 class PelatihanSection extends StatelessWidget {
@@ -13,23 +12,47 @@ class PelatihanSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PelatihanController controller = Get.put(PelatihanController());
-
-    // Memanggil loadPelatihanHome() untuk home
     controller.loadPelatihanHome();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Pelatihan',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.whatshot_rounded,
+                          size: 20,
+                          color: danger,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Pelatihan Pilihan',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Dikurasi khusus berdasarkan permintaan industri terkini',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: textTheme.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               TextButton(
@@ -38,11 +61,11 @@ class PelatihanSection extends StatelessWidget {
                 },
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       'Lihat semua',
@@ -63,19 +86,17 @@ class PelatihanSection extends StatelessWidget {
             ],
           ),
         ),
-
-        // Body list pelatihan
         Obx(() {
           if (controller.isLoadingHome.value && controller.pelatihanListHome.isEmpty) {
             return SizedBox(
-              height: 270, // Ditambah untuk ruang shadow
+              height: 315,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8), // Tambah padding vertical
+                padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
                 itemCount: 3,
                 itemBuilder: (context, index) {
                   return Container(
-                    width: 200,
+                    width: 260,
                     margin: EdgeInsets.only(
                       left: index == 0 ? 0 : 8,
                       right: index == 2 ? 16 : 0,
@@ -96,13 +117,13 @@ class PelatihanSection extends StatelessWidget {
                     Icon(
                       Icons.school_outlined,
                       size: 48,
-                      color: Colors.grey[400],
+                      color: textTheme.withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'Belum ada pelatihan',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[500],
+                        color: textTheme.withValues(alpha: 0.5),
                       ),
                     ),
                   ],
@@ -112,20 +133,20 @@ class PelatihanSection extends StatelessWidget {
           }
 
           return SizedBox(
-            height: 270, // Ditambah dari 250 menjadi 270 untuk ruang shadow
+            height: 315,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8), // Tambah padding vertical
+              padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
               itemCount: controller.pelatihanListHome.length,
               itemBuilder: (context, index) {
                 final pelatihan = controller.pelatihanListHome[index];
                 return Container(
-                  width: 200,
+                  width: 260,
                   margin: EdgeInsets.only(
                     left: index == 0 ? 0 : 8,
                     right: index == controller.pelatihanListHome.length - 1 ? 16 : 0,
                   ),
-                  child: ProdukCard.forPelatihan(pelatihan: pelatihan)
+                  child: ProdukCard.forPelatihan(pelatihan: pelatihan),
                 );
               },
             ),

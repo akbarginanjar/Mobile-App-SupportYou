@@ -24,6 +24,12 @@ class Pelatihan {
   final int? jumlahHalaman;
   final String? isbn;
   final List<Batch> batches;
+  final String? level;
+  final double? rating;
+  final int? ratingCount;
+  final bool isDiskonAktif;
+  final int? hargaCoret;
+  final int? hargaSetelahDiskon;
 
   Pelatihan({
     required this.id,
@@ -51,7 +57,33 @@ class Pelatihan {
     this.jumlahHalaman,
     this.isbn,
     this.batches = const [],
+    this.level,
+    this.rating,
+    this.ratingCount,
+    this.isDiskonAktif = false,
+    this.hargaCoret,
+    this.hargaSetelahDiskon,
   });
+
+  int get displayPrice {
+    if (isDiskonAktif && hargaSetelahDiskon != null) {
+      return hargaSetelahDiskon!;
+    }
+    if (hargaFinal != null && hargaFinal! < harga) {
+      return hargaFinal!;
+    }
+    return harga;
+  }
+
+  int? get originalPrice {
+    if (isDiskonAktif && hargaCoret != null) {
+      return hargaCoret;
+    }
+    if (hargaFinal != null && hargaFinal! < harga) {
+      return harga;
+    }
+    return null;
+  }
 
   factory Pelatihan.fromJson(Map<String, dynamic> json) {
     int? tokoMemberId;
@@ -91,6 +123,16 @@ class Pelatihan {
       batches: (json['batches'] as List?)
               ?.map((e) => Batch.fromJson(e))
               .toList() ?? [],
+      level: json['level'],
+      rating: json['rating'] != null 
+          ? (json['rating'] is int 
+              ? (json['rating'] as int).toDouble() 
+              : (json['rating'] as num).toDouble())
+          : null,
+      ratingCount: json['rating_count'],
+      isDiskonAktif: json['is_diskon_aktif'] ?? false,
+      hargaCoret: json['harga_coret'],
+      hargaSetelahDiskon: json['harga_setelah_diskon'],
     );
   }
 }

@@ -12,23 +12,47 @@ class EbookSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final EbookController controller = Get.put(EbookController());
-
-    // Memanggil loadEbookHome() untuk home
     controller.loadEbookHome();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header Section - konsisten dengan PelatihanSection
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'E-Book',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.whatshot_rounded,
+                          size: 20,
+                          color: danger,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Ebook Terlaris',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Ebook pilihan untuk peningkatan literasi Anda',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: textTheme.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               TextButton(
@@ -37,11 +61,11 @@ class EbookSection extends StatelessWidget {
                 },
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       'Lihat semua',
@@ -62,19 +86,17 @@ class EbookSection extends StatelessWidget {
             ],
           ),
         ),
-
-        // Body list ebook
         Obx(() {
           if (controller.isLoadingHome.value && controller.ebookListHome.isEmpty) {
             return SizedBox(
-              height: 270, // Sama dengan PelatihanSection
+              height: 280,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
                 itemCount: 3,
                 itemBuilder: (context, index) {
                   return Container(
-                    width: 200, // Sama dengan lebar card Pelatihan
+                    width: 260,
                     margin: EdgeInsets.only(
                       left: index == 0 ? 0 : 8,
                       right: index == 2 ? 16 : 0,
@@ -95,13 +117,13 @@ class EbookSection extends StatelessWidget {
                     Icon(
                       Icons.menu_book_outlined,
                       size: 48,
-                      color: Colors.grey[400],
+                      color: textTheme.withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'Belum ada e-book',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[500],
+                        color: textTheme.withValues(alpha: 0.5),
                       ),
                     ),
                   ],
@@ -111,7 +133,7 @@ class EbookSection extends StatelessWidget {
           }
 
           return SizedBox(
-            height: 270, // Sama dengan PelatihanSection
+            height: 280,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
@@ -119,7 +141,7 @@ class EbookSection extends StatelessWidget {
               itemBuilder: (context, index) {
                 final ebook = controller.ebookListHome[index];
                 return Container(
-                  width: 200, // Sama dengan lebar card Pelatihan
+                  width: 260,
                   margin: EdgeInsets.only(
                     left: index == 0 ? 0 : 8,
                     right: index == controller.ebookListHome.length - 1 ? 16 : 0,
