@@ -18,10 +18,14 @@ import 'package:mobile_supportyou/views/pembayaran/screen.dart';
 
 class CheckoutController extends GetxController {
   final Pelatihan pelatihan;
+  final Batch? selectedBatch;
   final PaymentService _paymentService = PaymentService();
   final GetStorage _storage = GetStorage();
   
-  CheckoutController({required this.pelatihan});
+  CheckoutController({
+    required this.pelatihan,
+    this.selectedBatch,
+  });
   
   final isLoading = true.obs;
   final isProcessing = false.obs;
@@ -114,6 +118,7 @@ class CheckoutController extends GetxController {
     
     debugPrint('✅ FINAL konsumen_member_id: ${konsumenMemberId.value}');
     debugPrint('✅ FINAL konsumen_member_alamat_id: ${konsumenMemberAlamatId.value}');
+    debugPrint('✅ Selected Batch ID: ${selectedBatch?.id ?? "None"}');
     debugPrint('═══════════════════════════════════════════════════════════');
   }
   
@@ -367,6 +372,7 @@ class CheckoutController extends GetxController {
     debugPrint('Member ID (konsumen_member_id): ${konsumenMemberId.value}');
     debugPrint('Address ID: ${konsumenMemberAlamatId.value}');
     debugPrint('Product type: ${pelatihan.type}');
+    debugPrint('Selected Batch ID: ${selectedBatch?.id ?? "None"}');
     
     isProcessing.value = true;
     
@@ -409,6 +415,9 @@ class CheckoutController extends GetxController {
           'harga': basePrice,
           'type': 'ebook',
         };
+        if (selectedBatch != null) {
+          itemData['batch_id'] = selectedBatch!.id;
+        }
         debugPrint('📦 Processing as EBOOK with transaction_type: $transactionType');
         
         checkoutData = {
@@ -441,6 +450,9 @@ class CheckoutController extends GetxController {
           'qty': 1,
           'harga': finalPrice,
         };
+        if (selectedBatch != null) {
+          itemData['batch_id'] = selectedBatch!.id;
+        }
         debugPrint('📦 Processing as PELATIHAN with transaction_type: $transactionType');
         
         checkoutData = {

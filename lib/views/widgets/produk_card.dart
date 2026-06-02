@@ -67,7 +67,6 @@ class ProdukCard extends StatelessWidget {
     final bool hasDiscount = _originalPrice != null && _originalPrice! > _displayPrice;
     
     return Container(
-      width: 260,
       decoration: BoxDecoration(
         color: theme,
         borderRadius: BorderRadius.circular(16),
@@ -85,6 +84,7 @@ class ProdukCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -145,23 +145,24 @@ class ProdukCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     _nama,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       height: 1.3,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
                       Icon(
                         isPelatihan ? Icons.business : Icons.person,
-                        size: 12,
+                        size: 10,
                         color: textTheme.withValues(alpha: 0.45),
                       ),
                       const SizedBox(width: 4),
@@ -173,7 +174,7 @@ class ProdukCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 10,
                             color: textTheme.withValues(alpha: 0.6),
                           ),
                         ),
@@ -181,22 +182,22 @@ class ProdukCard extends StatelessWidget {
                     ],
                   ),
                   if (isPelatihan) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
                       spacing: 4,
-                      runSpacing: 4,
+                      runSpacing: 2,
                       children: [
                         Text(
                           levelText,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 9,
                             color: textTheme.withValues(alpha: 0.6),
                           ),
                         ),
                         Container(
-                          width: 3,
-                          height: 3,
+                          width: 2,
+                          height: 2,
                           decoration: BoxDecoration(
                             color: textTheme.withValues(alpha: 0.4),
                             shape: BoxShape.circle,
@@ -205,14 +206,14 @@ class ProdukCard extends StatelessWidget {
                         Text(
                           typeText,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 9,
                             color: textTheme.withValues(alpha: 0.6),
                           ),
                         ),
                         if (ratingCountValue > 0) ...[
                           Container(
-                            width: 3,
-                            height: 3,
+                            width: 2,
+                            height: 2,
                             decoration: BoxDecoration(
                               color: textTheme.withValues(alpha: 0.4),
                               shape: BoxShape.circle,
@@ -223,22 +224,22 @@ class ProdukCard extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.star,
-                                size: 12,
+                                size: 9,
                                 color: Colors.amber,
                               ),
                               const SizedBox(width: 2),
                               Text(
                                 ratingValue.toStringAsFixed(0),
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 9,
                                   fontWeight: FontWeight.w500,
                                   color: textTheme.withValues(alpha: 0.7),
                                 ),
                               ),
                               Text(
-                                ' ($ratingCountValue ulasan)',
+                                ' ($ratingCountValue)',
                                 style: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 8,
                                   color: textTheme.withValues(alpha: 0.45),
                                 ),
                               ),
@@ -248,7 +249,7 @@ class ProdukCard extends StatelessWidget {
                       ],
                     ),
                   ],
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -262,7 +263,7 @@ class ProdukCard extends StatelessWidget {
                               Text(
                                 Formatter.formatCurrency(_originalPrice),
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   decoration: TextDecoration.lineThrough,
                                   color: textTheme.withValues(alpha: 0.4),
                                 ),
@@ -270,7 +271,7 @@ class ProdukCard extends StatelessWidget {
                             Text(
                               Formatter.formatCurrency(_displayPrice),
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: primary,
                               ),
@@ -279,14 +280,14 @@ class ProdukCard extends StatelessWidget {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
                           color: primary,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Icon(
                           Icons.arrow_forward_rounded,
-                          size: 14,
+                          size: 12,
                           color: Colors.white,
                         ),
                       ),

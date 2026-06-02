@@ -7,20 +7,21 @@ import 'package:mobile_supportyou/views/home_screen/carousel.dart';
 import 'package:mobile_supportyou/views/home_screen/ebook_section.dart';
 import 'package:mobile_supportyou/views/home_screen/kategori.dart';
 import 'package:mobile_supportyou/views/home_screen/pelatihan_section.dart';
+import 'package:mobile_supportyou/views/search_screen/screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+  
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(HomeController());
-    TextEditingController search = TextEditingController();
+    
     return Scaffold(
       body: RefreshIndicator(
         color: primary,
         backgroundColor: theme,
         onRefresh: () async {
           await Future.delayed(const Duration(seconds: 1));
-          // GetProduk.to.refreshState();
         },
         child: CustomScrollView(
           slivers: [
@@ -61,20 +62,32 @@ class HomeScreen extends StatelessWidget {
               bottom: AppBar(
                 title: Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Container(
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: theme,
-                      borderRadius: BorderRadius.circular(15),
+                  child: GestureDetector(
+                    onTap: () {
+                      Get.to(() => const SearchScreen(autoFocus: true));
+                    },
+                    child: Container(
+                      height: 45,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: theme.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: textTheme.withValues(alpha: 0.1)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.search, size: 20, color: textTheme.withValues(alpha: 0.5)),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Cari pelatihan...',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: textTheme.withValues(alpha: 0.4),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: SearchField(
-                      controller: search,
-                      hintText: 'Cari produk...',
-                      onSearch: () {
-                        // Get.to(SearchProduk(search: search.text));
-                      },
-                    ),
-
                   ),
                 ),
               ),

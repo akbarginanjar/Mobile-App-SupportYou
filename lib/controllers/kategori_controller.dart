@@ -1,4 +1,3 @@
-// lib/controllers/kategori_controller.dart
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/models/kategori_model.dart';
 import 'package:mobile_supportyou/services/kategori_service.dart';

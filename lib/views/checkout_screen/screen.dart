@@ -10,15 +10,20 @@ import 'package:mobile_supportyou/utils/value_formatter.dart';
 
 class CheckoutScreen extends StatelessWidget {
   final Pelatihan pelatihan;
+  final Batch? selectedBatch;
   
   const CheckoutScreen({
     super.key,
     required this.pelatihan,
+    this.selectedBatch,
   });
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(CheckoutController(pelatihan: pelatihan));
+    final controller = Get.put(CheckoutController(
+      pelatihan: pelatihan,
+      selectedBatch: selectedBatch,
+    ));
     
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -67,8 +72,18 @@ class CheckoutScreen extends StatelessWidget {
   
   Widget _buildProductCard(BuildContext context, CheckoutController controller) {
     final pelatihan = controller.pelatihan;
-    final formattedDate = DateFormatter.formatDateWithDayAndTime(pelatihan.waktu);
     final isOnline = pelatihan.typePelatihan == 'online';
+    final isBatchSelected = controller.selectedBatch != null;
+    
+    String scheduleText = '';
+    if (isBatchSelected && controller.selectedBatch != null) {
+      final batch = controller.selectedBatch!;
+      scheduleText = 'Batch: ${batch.namaBatch} - ${batch.formattedDateRange}';
+    } else if (pelatihan.waktu != null && pelatihan.waktu!.isNotEmpty) {
+      scheduleText = DateFormatter.formatDateWithDayAndTime(pelatihan.waktu);
+    } else {
+      scheduleText = 'Jadwal akan diinformasikan';
+    }
     
     return Container(
       margin: const EdgeInsets.all(16),
@@ -166,7 +181,7 @@ class CheckoutScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      Formatter.formatCurrency(pelatihan.hargaFinal ?? pelatihan.harga),
+                      Formatter.formatCurrency(pelatihan.displayPrice),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -180,7 +195,7 @@ class CheckoutScreen extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            formattedDate,
+                            scheduleText,
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey[500],
@@ -417,7 +432,7 @@ class CheckoutScreen extends StatelessWidget {
   }
   
   Widget _buildOrderSummary(BuildContext context, CheckoutController controller) {
-    final basePrice = controller.pelatihan.hargaFinal ?? controller.pelatihan.harga;
+    final basePrice = controller.pelatihan.displayPrice;
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -219,6 +219,7 @@ class Batch {
   final String? tempat;
   final int pesertaTerdaftar;
   final int sisaPeserta;
+  final bool isPublished;
 
   Batch({
     required this.id,
@@ -234,6 +235,7 @@ class Batch {
     this.tempat,
     required this.pesertaTerdaftar,
     required this.sisaPeserta,
+    this.isPublished = false,
   });
 
   factory Batch.fromJson(Map<String, dynamic> json) {
@@ -251,6 +253,7 @@ class Batch {
       tempat: json['tempat'],
       pesertaTerdaftar: json['peserta_terdaftar'] ?? 0,
       sisaPeserta: json['sisa_peserta'] ?? 0,
+      isPublished: json['is_published'] ?? false,
     );
   }
 

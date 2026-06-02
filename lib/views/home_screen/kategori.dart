@@ -2,26 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/kategori_controller.dart';
-import 'package:mobile_supportyou/views/kategori_pelatihan_screen/screen.dart';
+import 'package:mobile_supportyou/views/widgets/kategori_chip.dart';
+import 'package:mobile_supportyou/views/search_screen/screen.dart';
 
 class KategoriSection extends StatelessWidget {
   const KategoriSection({super.key});
-
-  IconData _getCategoryIcon(String categoryName) {
-    final name = categoryName.toLowerCase();
-    if (name.contains('digital') || name.contains('marketing') || name.contains('e-commerce')) {
-      return Icons.shopping_cart_rounded;
-    } else if (name.contains('desain') || name.contains('kreatif')) {
-      return Icons.design_services_rounded;
-    } else if (name.contains('bisnis') || name.contains('kewirausahaan')) {
-      return Icons.business_center_rounded;
-    } else if (name.contains('pengembangan') || name.contains('diri')) {
-      return Icons.psychology_rounded;
-    } else if (name.contains('keuangan') || name.contains('investasi')) {
-      return Icons.show_chart_rounded;
-    }
-    return Icons.category_rounded;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,36 +65,14 @@ class KategoriSection extends StatelessWidget {
                 final kategori = activeCategories[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: FilterChip(
-                    label: Text(
-                      kategori.namaKategori,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: textTheme.withValues(alpha: 0.8),
-                      ),
-                    ),
-                    avatar: Icon(
-                      _getCategoryIcon(kategori.namaKategori),
-                      size: 18,
-                      color: primary,
-                    ),
-                    onSelected: (_) {
-                      Get.to(() => PelatihanByKategoriScreen(
-                        kategoriId: kategori.id,
-                        kategoriNama: kategori.namaKategori,
+                  child: KategoriChip(
+                    kategori: kategori,
+                    onTap: () {
+                      Get.to(() => SearchScreen(
+                        initialKategoriId: kategori.id,
+                        autoFocus: false,
                       ));
                     },
-                    backgroundColor: theme,
-                    selectedColor: primary.withValues(alpha: 0.1),
-                    checkmarkColor: primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      side: BorderSide(
-                        color: textTheme.withValues(alpha: 0.15),
-                      ),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 );
               },

@@ -15,15 +15,54 @@ import 'package:mobile_supportyou/views/pelatihan_screen/sections/description_se
 import 'package:mobile_supportyou/views/pelatihan_screen/sections/speaker_section.dart';
 import 'package:mobile_supportyou/views/pelatihan_screen/sections/testimonial_section.dart';
 
-class PelatihanScreen extends StatelessWidget {
+class PelatihanScreen extends StatefulWidget {
   final String slug;
   const PelatihanScreen({super.key, required this.slug});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.put(PelatihanController());
-    controller.loadDetailPelatihan(slug);
+  State<PelatihanScreen> createState() => _PelatihanScreenState();
+}
 
+class _PelatihanScreenState extends State<PelatihanScreen> {
+  final controller = Get.put(PelatihanController());
+  Batch? _selectedBatch;
+
+  @override
+  void initState() {
+    super.initState();
+    controller.loadDetailPelatihan(widget.slug);
+  }
+
+  void _onBatchSelected(Batch? batch) {
+    setState(() {
+      _selectedBatch = batch;
+    });
+  }
+
+  void _onDaftarSekarang(Pelatihan pelatihan) {
+    final hasPublishedBatches = pelatihan.batches.where((b) => b.isPublished).isNotEmpty;
+    final hasMainSchedule = pelatihan.startTime != null && pelatihan.startTime!.isNotEmpty;
+    
+    if (hasPublishedBatches && !hasMainSchedule && _selectedBatch == null) {
+      Get.snackbar(
+        'Peringatan',
+        'Silakan pilih jadwal pelatihan terlebih dahulu',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+    
+    Get.to(() => CheckoutScreen(
+      pelatihan: pelatihan,
+      selectedBatch: _selectedBatch,
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -83,18 +122,20 @@ class PelatihanScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: PriceSection(
-                  hargaFinal: pelatihan.hargaFinal ?? pelatihan.harga,
-                  hargaAsli: pelatihan.harga,
+                  hargaFinal: pelatihan.displayPrice,
+                  hargaAsli: pelatihan.originalPrice ?? pelatihan.harga,
                 ),
               ),
               const SizedBox(height: 12),
-              if (pelatihan.batches.isNotEmpty)
+              if ((pelatihan.startTime != null && pelatihan.startTime!.isNotEmpty) || pelatihan.batches.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: ScheduleSection(
                     startTime: pelatihan.startTime,
                     endTime: pelatihan.endTime,
+                    maxPeserta: pelatihan.maxPeserta,
                     batches: pelatihan.batches,
+                    onBatchSelected: _onBatchSelected,
                   ),
                 ),
               const SizedBox(height: 12),
@@ -203,9 +244,7 @@ class PelatihanScreen extends StatelessWidget {
                 ),
                 elevation: 0,
               ),
-              onPressed: () {
-                Get.to(() => CheckoutScreen(pelatihan: pelatihan));
-              },
+              onPressed: () => _onDaftarSekarang(pelatihan),
               icon: const Icon(Icons.flash_on, size: 20),
               label: const Text(
                 'Daftar Sekarang',
@@ -220,4 +259,4 @@ class PelatihanScreen extends StatelessWidget {
       }),
     );
   }
-} 
+}

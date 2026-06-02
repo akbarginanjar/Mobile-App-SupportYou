@@ -4,7 +4,7 @@ import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/pelatihan_controller.dart';
 import 'package:mobile_supportyou/views/widgets/produk_card.dart';
 import 'package:mobile_supportyou/views/widgets/produk_skeleton.dart';
-import 'package:mobile_supportyou/views/semua_pelatihan_screen/screen.dart';
+import 'package:mobile_supportyou/views/search_screen/screen.dart';
 
 class PelatihanSection extends StatelessWidget {
   const PelatihanSection({super.key});
@@ -57,7 +57,7 @@ class PelatihanSection extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  Get.to(() => const SemuaPelatihanScreen());
+                  Get.to(() => const SearchScreen(autoFocus: false));
                 },
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

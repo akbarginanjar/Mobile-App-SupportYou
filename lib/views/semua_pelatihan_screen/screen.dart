@@ -152,7 +152,7 @@ class _SemuaPelatihanScreenState extends State<SemuaPelatihanScreen> {
                         crossAxisCount: 2,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 12,
-                        childAspectRatio: 0.7,
+                        childAspectRatio: 0.66,
                       ),
                       itemCount: controller.pelatihanListAll.length +
                           (controller.isMoreLoadingAll.value ? 1 : 0),

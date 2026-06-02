@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
+import 'package:mobile_supportyou/utils/date_formatter.dart';
 
 class ScheduleSection extends StatefulWidget {
   final String? startTime;
   final String? endTime;
+  final int? maxPeserta;
   final List<Batch> batches;
+  final Function(Batch?) onBatchSelected;
 
   const ScheduleSection({
     super.key,
     required this.startTime,
     required this.endTime,
+    required this.maxPeserta,
     required this.batches,
+    required this.onBatchSelected,
   });
 
   @override
@@ -21,41 +25,82 @@ class ScheduleSection extends StatefulWidget {
 
 class _ScheduleSectionState extends State<ScheduleSection> {
   Batch? _selectedBatch;
+  List<ScheduleItem> _allSchedules = [];
 
   @override
   void initState() {
     super.initState();
-    if (widget.batches.isNotEmpty) {
-      _selectedBatch = widget.batches.first;
+    _buildScheduleList();
+  }
+
+  void _buildScheduleList() {
+    _allSchedules.clear();
+
+    if (widget.startTime != null && widget.startTime!.isNotEmpty) {
+      _allSchedules.add(
+        ScheduleItem(
+          id: 0,
+          isMain: true,
+          name: 'Jadwal Utama',
+          startTime: widget.startTime!,
+          endTime: widget.endTime,
+          maxPeserta: widget.maxPeserta ?? 0,
+        ),
+      );
+    }
+
+    final publishedBatches = widget.batches.where((b) => b.isPublished).toList();
+    for (var batch in publishedBatches) {
+      _allSchedules.add(
+        ScheduleItem(
+          id: batch.id,
+          isMain: false,
+          name: batch.namaBatch,
+          startTime: batch.tanggalMulai != null && batch.jamMulai != null
+              ? '${batch.tanggalMulai} ${batch.jamMulai}'
+              : '',
+          endTime: batch.tanggalSelesai != null && batch.jamSelesai != null
+              ? '${batch.tanggalSelesai} ${batch.jamSelesai}'
+              : null,
+          maxPeserta: batch.maxPeserta,
+          originalBatch: batch,
+        ),
+      );
     }
   }
 
-  String _formatDate(String? dateString) {
-    if (dateString == null || dateString.isEmpty) return 'Belum ditentukan';
+  String _formatScheduleDate(String dateTimeString) {
+    if (dateTimeString.isEmpty) return 'Belum ditentukan';
     try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('d MMMM y', 'id').format(date);
-    } catch (e) {
-      return dateString;
-    }
-  }
-
-  String _formatTime(String? timeString) {
-    if (timeString == null || timeString.isEmpty) return 'Belum ditentukan';
-    try {
-      final parts = timeString.split(':');
+      final parts = dateTimeString.split(' ');
       if (parts.length >= 2) {
-        return '${parts[0]}:${parts[1]}';
+        return DateFormatter.formatDateWithMonthName(parts[0]);
       }
-      return timeString;
+      return DateFormatter.formatDateWithMonthName(dateTimeString);
     } catch (e) {
-      return timeString;
+      return dateTimeString;
+    }
+  }
+
+  String _formatScheduleTime(String dateTimeString) {
+    if (dateTimeString.isEmpty) return 'Belum ditentukan';
+    try {
+      final parts = dateTimeString.split(' ');
+      if (parts.length >= 2) {
+        final timeParts = parts[1].split(':');
+        if (timeParts.length >= 2) {
+          return '${timeParts[0]}:${timeParts[1]} WIB';
+        }
+      }
+      return DateFormatter.formatTimeOnly(dateTimeString);
+    } catch (e) {
+      return dateTimeString;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.batches.isEmpty) {
+    if (_allSchedules.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -74,7 +119,7 @@ class _ScheduleSectionState extends State<ScheduleSection> {
               Icon(Icons.calendar_today, size: 18, color: primary),
               const SizedBox(width: 8),
               Text(
-                'Pilih Jadwal Batch',
+                'Pilih Jadwal Pelatihan',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -85,30 +130,39 @@ class _ScheduleSectionState extends State<ScheduleSection> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${widget.batches.length} jadwal tersedia',
+            '${_allSchedules.length} jadwal tersedia',
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey[600],
             ),
           ),
           const SizedBox(height: 12),
-          ...widget.batches.map((batch) => _buildBatchCard(batch)),
+          ..._allSchedules.map((schedule) => _buildScheduleCard(schedule)),
         ],
       ),
     );
   }
 
-  Widget _buildBatchCard(Batch batch) {
-    final isSelected = _selectedBatch?.id == batch.id;
-    final date = _formatDate(batch.tanggalMulai);
-    final time = '${_formatTime(batch.jamMulai)} – ${_formatTime(batch.jamSelesai)} WIB';
+  Widget _buildScheduleCard(ScheduleItem schedule) {
+    final isSelected = schedule.isMain 
+        ? (_selectedBatch == null) 
+        : (_selectedBatch?.id == schedule.id);
+        
+    final date = _formatScheduleDate(schedule.startTime);
+    final time = _formatScheduleTime(schedule.startTime);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
           setState(() {
-            _selectedBatch = batch;
+            if (schedule.isMain) {
+              _selectedBatch = null;
+              widget.onBatchSelected(null);
+            } else {
+              _selectedBatch = schedule.originalBatch;
+              widget.onBatchSelected(schedule.originalBatch);
+            }
           });
         },
         borderRadius: BorderRadius.circular(12),
@@ -128,19 +182,40 @@ class _ScheduleSectionState extends State<ScheduleSection> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      batch.namaBatch,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? primary : Colors.black87,
-                      ),
+                    Row(
+                      children: [
+                        if (schedule.isMain)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'UTAMA',
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w600,
+                                color: primary,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(width: 8),
+                        Text(
+                          schedule.name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? primary : Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(Icons.calendar_today, size: 12, color: Colors.grey[600]),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Text(
                           date,
                           style: TextStyle(
@@ -150,13 +225,27 @@ class _ScheduleSectionState extends State<ScheduleSection> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         Icon(Icons.access_time, size: 12, color: Colors.grey[600]),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Text(
                           time,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.people_outline, size: 12, color: Colors.grey[600]),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Maksimal ${schedule.maxPeserta} peserta',
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.grey[600],
@@ -179,4 +268,24 @@ class _ScheduleSectionState extends State<ScheduleSection> {
       ),
     );
   }
+}
+
+class ScheduleItem {
+  final int id;
+  final bool isMain;
+  final String name;
+  final String startTime;
+  final String? endTime;
+  final int maxPeserta;
+  final Batch? originalBatch;
+
+  ScheduleItem({
+    required this.id,
+    required this.isMain,
+    required this.name,
+    required this.startTime,
+    this.endTime,
+    required this.maxPeserta,
+    this.originalBatch,
+  });
 }
