@@ -7,18 +7,24 @@ import 'package:mobile_supportyou/controllers/edit_profil_controller.dart';
 class EditProfilScreen extends StatelessWidget {
   const EditProfilScreen({super.key});
 
+  String getFullImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    return 'https://api-supportyou.kehosting.in/$path';
+  }
+
   @override
   Widget build(BuildContext context) {
     final EditProfilController controller = Get.put(EditProfilController());
-    
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(
           'Edit Profil',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         elevation: 0,
         backgroundColor: Colors.white,
@@ -28,11 +34,7 @@ class EditProfilScreen extends StatelessWidget {
             onPressed: () => controller.updateProfile(),
             child: Text(
               'Simpan',
-              style: TextStyle(
-                color: primary,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: primary, fontWeight: FontWeight.w600, fontSize: 14),
             ),
           ),
         ],
@@ -45,7 +47,6 @@ class EditProfilScreen extends StatelessWidget {
               children: [
                 _buildAvatarSection(context, controller),
                 const SizedBox(height: 24),
-                
                 _buildTextField(
                   context,
                   controller: controller.namaLengkapController,
@@ -54,7 +55,6 @@ class EditProfilScreen extends StatelessWidget {
                   hint: 'Masukkan nama lengkap',
                 ),
                 const SizedBox(height: 16),
-                
                 _buildTextField(
                   context,
                   controller: controller.emailController,
@@ -64,7 +64,6 @@ class EditProfilScreen extends StatelessWidget {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 16),
-                
                 _buildTextField(
                   context,
                   controller: controller.noHpController,
@@ -73,9 +72,7 @@ class EditProfilScreen extends StatelessWidget {
                   hint: 'Masukkan nomor WhatsApp',
                   keyboardType: TextInputType.phone,
                 ),
-                
                 const SizedBox(height: 32),
-                
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -90,95 +87,99 @@ class EditProfilScreen extends StatelessWidget {
                       Expanded(
                         child: Text(
                           'Perubahan akan langsung tersimpan dan diperbarui di halaman profil',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue[700],
-                          ),
+                          style: TextStyle(fontSize: 12, color: Colors.blue[700]),
                         ),
                       ),
                     ],
                   ),
                 ),
-                
                 const SizedBox(height: 80),
               ],
             ),
           ),
-          
-          // Loading overlay
           if (controller.isLoading.value)
             Container(
               color: Colors.black.withValues(alpha: 0.5),
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: const Center(child: CircularProgressIndicator()),
             ),
         ],
       ),
     );
   }
-  
+
   Widget _buildAvatarSection(BuildContext context, EditProfilController controller) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: () {
-            Get.snackbar(
-              'Info',
-              'Fitur ganti foto profil akan segera hadir',
-              snackPosition: SnackPosition.BOTTOM,
-            );
-          },
-          borderRadius: BorderRadius.circular(40),
-          child: Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                controller.namaLengkapController.text.isNotEmpty 
-                    ? controller.namaLengkapController.text[0].toUpperCase() 
-                    : 'U',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: primary,
+    return Obx(() {
+      return Column(
+        children: [
+          InkWell(
+            onTap: () => controller.pickImage(),
+            borderRadius: BorderRadius.circular(60),
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: primary, width: 2),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 2)),
+                ],
+              ),
+              child: ClipOval(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (controller.profileImage.value != null)
+                      Image.file(controller.profileImage.value!, fit: BoxFit.cover)
+                    else if (controller.currentPhotoUrl.value != null && controller.currentPhotoUrl.value!.isNotEmpty)
+                      Image.network(
+                        getFullImageUrl(controller.currentPhotoUrl.value),
+                        fit: BoxFit.cover,
+                        key: ValueKey(controller.currentPhotoUrl.value),
+                        errorBuilder: (context, error, stackTrace) => _buildAvatarPlaceholder(controller),
+                      )
+                    else
+                      _buildAvatarPlaceholder(controller),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: const Center(child: Icon(Icons.camera_alt, color: Colors.white, size: 30)),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Foto Profil',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-        InkWell(
-          onTap: () {
-            Get.snackbar(
-              'Info',
-              'Fitur ganti foto profil akan segera hadir',
-              snackPosition: SnackPosition.BOTTOM,
-            );
-          },
-          child: Text(
-            'Klik untuk ubah foto',
-            style: TextStyle(
-              fontSize: 10,
-              color: primary,
+          const SizedBox(height: 8),
+          Text('Foto Profil', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          const SizedBox(height: 4),
+          InkWell(
+            onTap: () => controller.pickImage(),
+            child: Text(
+              controller.profileImage.value == null ? 'Tambah / Ubah Foto' : 'Ganti Foto',
+              style: TextStyle(fontSize: 12, color: primary, fontWeight: FontWeight.w500),
             ),
           ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildAvatarPlaceholder(EditProfilController controller) {
+    return Container(
+      color: primary.withValues(alpha: 0.1),
+      child: Center(
+        child: Text(
+          controller.namaLengkapController.text.isNotEmpty
+              ? controller.namaLengkapController.text[0].toUpperCase()
+              : 'U',
+          style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: primary),
         ),
-      ],
+      ),
     );
   }
-  
+
   Widget _buildTextField(
     BuildContext context, {
     required TextEditingController controller,
@@ -194,9 +195,9 @@ class EditProfilScreen extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-          ),
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
         ),
         const SizedBox(height: 8),
         TextFormField(

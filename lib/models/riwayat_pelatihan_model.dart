@@ -1,4 +1,3 @@
-// lib/models/riwayat_pelatihan_model.dart
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/utils/base.dart';
 
@@ -9,21 +8,51 @@ class PelatihanDibeli {
   final String? deskripsi;
   final int harga;
   final int? hargaFinal;
-  final String? tempat;
-  final String? waktu;
+  final String? _tempat;
+  final String? _waktu;
   final String? cover;
   final String type;
-  final String? typePelatihan;
+  final String? _typePelatihan;
   final int? maxPeserta;
   final Mitra? mitra;
   final String status;
-  final String? startTime;
-  final String? endTime;
-  final String? meetingLink;
+  final String? _startTime;
+  final String? _endTime;
+  final String? _meetingLink;
   final String? linkGmaps;
   final List<RincianTransaksi> rincianTransaksi;
   final List<Attachment> attachments;
-  
+  final Batch? selectedBatch;
+
+  String? get tempat => selectedBatch?.tempat ?? _tempat;
+  String? get waktu {
+    if (selectedBatch != null && selectedBatch!.tanggalMulai != null) {
+      String date = selectedBatch!.tanggalMulai!;
+      if (selectedBatch!.jamMulai != null) date += ' ${selectedBatch!.jamMulai}';
+      return date;
+    }
+    return _waktu;
+  }
+  String? get typePelatihan => selectedBatch != null ? (selectedBatch!.tempat != null ? 'offline' : 'online') : _typePelatihan;
+  String? get startTime {
+    if (selectedBatch != null && selectedBatch!.tanggalMulai != null) {
+      return '${selectedBatch!.tanggalMulai} ${selectedBatch!.jamMulai ?? ''}';
+    }
+    return _startTime;
+  }
+  String? get endTime {
+    if (selectedBatch != null && selectedBatch!.tanggalSelesai != null) {
+      return '${selectedBatch!.tanggalSelesai} ${selectedBatch!.jamSelesai ?? ''}';
+    }
+    return _endTime;
+  }
+  String? get meetingLink {
+    if (selectedBatch != null && selectedBatch!.meetingLink != null) {
+      return selectedBatch!.meetingLink;
+    }
+    return _meetingLink;
+  }
+
   PelatihanDibeli({
     required this.id,
     required this.nama,
@@ -31,44 +60,43 @@ class PelatihanDibeli {
     this.deskripsi,
     required this.harga,
     this.hargaFinal,
-    this.tempat,
-    this.waktu,
+    String? tempat,
+    String? waktu,
     this.cover,
     required this.type,
-    this.typePelatihan,
+    String? typePelatihan,
     this.maxPeserta,
     this.mitra,
     required this.status,
-    this.startTime,
-    this.endTime,
-    this.meetingLink,
+    String? startTime,
+    String? endTime,
+    String? meetingLink,
     this.linkGmaps,
     this.rincianTransaksi = const [],
     this.attachments = const [],
-  });
-  
+    this.selectedBatch,
+  })  : _tempat = tempat,
+        _waktu = waktu,
+        _typePelatihan = typePelatihan,
+        _startTime = startTime,
+        _endTime = endTime,
+        _meetingLink = meetingLink;
+
   String get coverUrl {
-    if (cover != null && cover!.isNotEmpty) {
-      return '${Base.url}$cover';
-    }
+    if (cover != null && cover!.isNotEmpty) return '${Base.url}$cover';
     return '';
   }
-  
-  String get kodeAkses {
-    if (rincianTransaksi.isNotEmpty) {
-      return rincianTransaksi.first.kodeAkses;
-    }
-    return '-';
-  }
-  
-  String get qrUrl {
-    if (rincianTransaksi.isNotEmpty && rincianTransaksi.first.qrUrl != null) {
-      return rincianTransaksi.first.qrUrl!;
-    }
-    return '';
-  }
-  
+  String get kodeAkses => rincianTransaksi.isNotEmpty ? rincianTransaksi.first.kodeAkses : '-';
+  String get qrUrl => rincianTransaksi.isNotEmpty && rincianTransaksi.first.qrUrl != null ? rincianTransaksi.first.qrUrl! : '';
+
   factory PelatihanDibeli.fromJson(Map<String, dynamic> json) {
+    Batch? selectedBatch;
+    if (json['selected_batch'] != null) {
+      selectedBatch = Batch.fromJson(json['selected_batch']);
+    } else if (json['rincian_transaksi'] != null && json['rincian_transaksi'].isNotEmpty) {
+      final rincian = json['rincian_transaksi'][0];
+      if (rincian['batch'] != null) selectedBatch = Batch.fromJson(rincian['batch']);
+    }
     return PelatihanDibeli(
       id: json['id'] ?? 0,
       nama: json['nama'] ?? '',
@@ -88,12 +116,9 @@ class PelatihanDibeli {
       endTime: json['end_time'],
       meetingLink: json['meeting_link'],
       linkGmaps: json['link_gmaps'],
-      rincianTransaksi: (json['rincian_transaksi'] as List?)
-          ?.map((e) => RincianTransaksi.fromJson(e))
-          .toList() ?? [],
-      attachments: (json['attachments'] as List?)
-          ?.map((e) => Attachment.fromJson(e))
-          .toList() ?? [],
+      rincianTransaksi: (json['rincian_transaksi'] as List?)?.map((e) => RincianTransaksi.fromJson(e)).toList() ?? [],
+      attachments: (json['attachments'] as List?)?.map((e) => Attachment.fromJson(e)).toList() ?? [],
+      selectedBatch: selectedBatch,
     );
   }
 }
@@ -105,26 +130,15 @@ class RincianTransaksi {
   final String? qrCode;
   final int transaksiId;
   final String? qrUrl;
-  
-  RincianTransaksi({
-    required this.id,
-    required this.pelatihanId,
-    required this.kodeAkses,
-    this.qrCode,
-    required this.transaksiId,
-    this.qrUrl,
-  });
-  
-  factory RincianTransaksi.fromJson(Map<String, dynamic> json) {
-    return RincianTransaksi(
-      id: json['id'] ?? 0,
-      pelatihanId: json['pelatihan_id'] ?? 0,
-      kodeAkses: json['kode_akses'] ?? '',
-      qrCode: json['qr_code'],
-      transaksiId: json['transaksi_id'] ?? 0,
-      qrUrl: json['qr_url'],
-    );
-  }
+  RincianTransaksi({required this.id, required this.pelatihanId, required this.kodeAkses, this.qrCode, required this.transaksiId, this.qrUrl});
+  factory RincianTransaksi.fromJson(Map<String, dynamic> json) => RincianTransaksi(
+    id: json['id'] ?? 0,
+    pelatihanId: json['pelatihan_id'] ?? 0,
+    kodeAkses: json['kode_akses'] ?? '',
+    qrCode: json['qr_code'],
+    transaksiId: json['transaksi_id'] ?? 0,
+    qrUrl: json['qr_url'],
+  );
 }
 
 class Attachment {
@@ -132,22 +146,12 @@ class Attachment {
   final int pelatihanId;
   final String path;
   final bool isMain;
-  
-  Attachment({
-    required this.id,
-    required this.pelatihanId,
-    required this.path,
-    required this.isMain,
-  });
-  
-  factory Attachment.fromJson(Map<String, dynamic> json) {
-    return Attachment(
-      id: json['id'] ?? 0,
-      pelatihanId: json['pelatihan_id'] ?? 0,
-      path: json['path'] ?? '',
-      isMain: json['is_main'] ?? false,
-    );
-  }
-  
+  Attachment({required this.id, required this.pelatihanId, required this.path, required this.isMain});
+  factory Attachment.fromJson(Map<String, dynamic> json) => Attachment(
+    id: json['id'] ?? 0,
+    pelatihanId: json['pelatihan_id'] ?? 0,
+    path: json['path'] ?? '',
+    isMain: json['is_main'] ?? false,
+  );
   String get url => '${Base.url}$path';
 }

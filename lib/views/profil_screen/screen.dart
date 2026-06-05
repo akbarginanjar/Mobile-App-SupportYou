@@ -10,6 +10,7 @@ import 'package:mobile_supportyou/controllers/riwayat_pelatihan_controller.dart'
 import 'package:mobile_supportyou/controllers/riwayat_ebook_controller.dart';
 import 'package:mobile_supportyou/views/profil_screen/edit_profil.dart';
 import 'package:mobile_supportyou/views/profil_screen/ganti_password.dart';
+import 'package:mobile_supportyou/views/profil_screen/hubungi_kami.dart';
 
 class ProfilScreen extends StatelessWidget {
   const ProfilScreen({super.key});
@@ -138,6 +139,16 @@ class ProfilScreen extends StatelessWidget {
                   colorText: theme,
                 );
               }
+            },
+          ),
+          const Divider(),
+          _buildMenuItem(
+            context,
+            icon: Icons.headset_mic,
+            title: 'Hubungi Kami',
+            subtitle: 'Customer service siap membantu Anda',
+            onTap: () {
+              Get.to(() => const HubungiKamiScreen());
             },
           ),
         ],

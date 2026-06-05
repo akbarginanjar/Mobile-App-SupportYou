@@ -69,18 +69,12 @@ class Pelatihan {
     if (isDiskonAktif && hargaSetelahDiskon != null) {
       return hargaSetelahDiskon!;
     }
-    if (hargaFinal != null && hargaFinal! < harga) {
-      return hargaFinal!;
-    }
     return harga;
   }
 
   int? get originalPrice {
     if (isDiskonAktif && hargaCoret != null) {
       return hargaCoret;
-    }
-    if (hargaFinal != null && hargaFinal! < harga) {
-      return harga;
     }
     return null;
   }

@@ -55,6 +55,8 @@ class CheckoutController extends GetxController {
   final countdown = ''.obs;
   Timer? _timer;
   
+  int get basePrice => pelatihan.displayPrice;
+  
   @override
   void onInit() {
     super.onInit();
@@ -119,6 +121,7 @@ class CheckoutController extends GetxController {
     debugPrint('✅ FINAL konsumen_member_id: ${konsumenMemberId.value}');
     debugPrint('✅ FINAL konsumen_member_alamat_id: ${konsumenMemberAlamatId.value}');
     debugPrint('✅ Selected Batch ID: ${selectedBatch?.id ?? "None"}');
+    debugPrint('✅ Base price (displayPrice): $basePrice');
     debugPrint('═══════════════════════════════════════════════════════════');
   }
   
@@ -235,8 +238,6 @@ class CheckoutController extends GetxController {
   Future<void> selectPaymentMethod() async {
     if (paymentGroups.isEmpty) return;
     
-    final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
-    
     final result = await Get.to(() => MetodePembayaranScreen(
           paymentGroups: paymentGroups,
           selectedMethod: selectedPaymentMethod.value,
@@ -264,7 +265,6 @@ class CheckoutController extends GetxController {
   Future<void> selectDiscount() async {
     if (availableDiscounts.isEmpty) return;
 
-    final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
     final result = await Get.to(() => VoucherScreen(
           discounts: availableDiscounts,
           selectedDiscount: selectedDiscount.value,
@@ -287,14 +287,13 @@ class CheckoutController extends GetxController {
   }
 
   void calculateTotalPrice() {
-    final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
     final total = basePrice + serviceFee.value + appFee.value + paymentGatewayFee.value - discountAmount.value;
     totalPrice.value = total;
 
     debugPrint('═══════════════════════════════════════════════════════════');
     debugPrint('💰 PRICE CALCULATION');
-    debugPrint('Base Price: ${pelatihan.harga}');
-    debugPrint('Final Price: ${pelatihan.hargaFinal ?? pelatihan.harga}');
+    debugPrint('Display Price (basePrice): $basePrice');
+    debugPrint('Original Price (if any): ${pelatihan.originalPrice}');
     debugPrint('Service Fee: ${serviceFee.value}');
     debugPrint('App Fee: ${appFee.value}');
     debugPrint('Payment Gateway Fee: ${paymentGatewayFee.value}');
@@ -377,7 +376,6 @@ class CheckoutController extends GetxController {
     isProcessing.value = true;
     
     try {
-      final basePrice = pelatihan.hargaFinal ?? pelatihan.harga;
       final tokoMemberId = pelatihan.mitra?.memberId ?? pelatihan.tokoMemberId ?? 0;
       
       String transactionType;
@@ -397,7 +395,7 @@ class CheckoutController extends GetxController {
       final metodeBayar = _getMetodeBayar(method);
       final paymentType = _getPaymentType(method);
       
-      debugPrint('💰 Base Price: $basePrice');
+      debugPrint('💰 Base Price (displayPrice): $basePrice');
       debugPrint('💰 Final Price (with PG fee): $finalPrice');
       debugPrint('💰 Uang Masuk (gross_amount): $uangMasuk');
       debugPrint('💰 Toko Member ID: $tokoMemberId');

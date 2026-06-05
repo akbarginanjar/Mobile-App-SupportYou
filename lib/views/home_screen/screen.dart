@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
-import 'package:mobile_supportyou/views/widgets/search_field.dart';
 import 'package:mobile_supportyou/controllers/home_controller.dart';
-import 'package:mobile_supportyou/views/home_screen/carousel.dart';
-import 'package:mobile_supportyou/views/home_screen/ebook_section.dart';
+import 'package:mobile_supportyou/controllers/profil_controller.dart';
+import 'package:mobile_supportyou/controllers/main_controller.dart';
+import 'package:mobile_supportyou/views/home_screen/hero_section.dart';
 import 'package:mobile_supportyou/views/home_screen/kategori.dart';
 import 'package:mobile_supportyou/views/home_screen/pelatihan_section.dart';
+import 'package:mobile_supportyou/views/home_screen/ebook_section.dart';
 import 'package:mobile_supportyou/views/search_screen/screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
   
+  String getFullImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    return 'https://api-supportyou.kehosting.in/$path';
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(HomeController());
+    final profilController = Get.isRegistered<ProfilController>()
+        ? Get.find<ProfilController>()
+        : Get.put(ProfilController());
+    final mainController = Get.find<MainController>();
     
     return Scaffold(
       body: RefreshIndicator(
@@ -45,18 +56,37 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               actions: [
-                IconButton(
-                  icon: Icon(Icons.notifications_none, color: primary),
-                  onPressed: () {
-                    // Get.to(const NotifikasiScreen());
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.favorite_border_rounded, color: primary),
-                  onPressed: () {
-                    // Get.to(WishlistProdukScreen());
-                  },
-                ),
+                Obx(() {
+                  final photoUrl = profilController.userPhoto.value;
+                  final name = profilController.userName.value;
+                  final initial = (name.isNotEmpty && name != 'Pengguna') ? name[0].toUpperCase() : 'U';
+                  
+                  return GestureDetector(
+                    onTap: () {
+                      mainController.changeIndex(2);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: primary.withValues(alpha: 0.1),
+                        backgroundImage: photoUrl.isNotEmpty
+                            ? NetworkImage(getFullImageUrl(photoUrl))
+                            : null,
+                        child: photoUrl.isEmpty
+                            ? Text(
+                                initial,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: primary,
+                                ),
+                              )
+                            : null,
+                      ),
+                    ),
+                  );
+                }),
                 const SizedBox(width: 10),
               ],
               bottom: AppBar(
@@ -94,20 +124,13 @@ class HomeScreen extends StatelessWidget {
             ),
             SliverList(
               delegate: SliverChildListDelegate([
-                const SizedBox(height: 7),
-                Carousel(  
-                  listImage: [
-                    "assets/banner/banner.png",
-                    "assets/banner/banner2.png",
-                    "assets/banner/banner1.png",
-                    ]
-                  ),
-                  const SizedBox(height: 8.0,),
-                  const KategoriSection(),
-                  const SizedBox(height: 20.0),
-                  const PelatihanSection(),
-                  const SizedBox(height: 20.0),
-                  const EbookSection(),
+                const HeroSection(),
+                const SizedBox(height: 16),
+                const KategoriSection(),
+                const SizedBox(height: 20),
+                const PelatihanSection(),
+                const SizedBox(height: 20),
+                const EbookSection(),
               ]),
             ),
           ],

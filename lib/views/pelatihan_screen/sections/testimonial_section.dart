@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
+import 'package:mobile_supportyou/utils/date_formatter.dart';
 
 class TestimonialSection extends StatelessWidget {
   final List<Testimonial> testimonials;
@@ -74,7 +74,7 @@ class TestimonialSection extends StatelessWidget {
         ),
         if (testimonial.createdAt != null)
           Text(
-            _formatDate(testimonial.createdAt!),
+            DateFormatter.formatDateWithMonthName(testimonial.createdAt),
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey[500],
@@ -91,14 +91,5 @@ class TestimonialSection extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('d MMM y', 'id').format(date);
-    } catch (e) {
-      return dateString;
-    }
   }
 }

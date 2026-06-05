@@ -20,22 +20,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const PilihTransaksiScreen(),
-    const Center(child: Text("Halaman Keranjang")),
     const ProfilScreen(),
-    //     Center(
-    //   child: SizedBox(
-    //     width: 200,
-    //     child: ElevatedButton(
-    //       onPressed: () {
-    //         final box = GetStorage();
-    //         box.erase(); // hapus semua data login
-    //         Get.offAll(() => LoginNoHpScreen()); // arahkan ke login
-    //       },
-    //       child: const Text("Logout"),
-    //     ),
-    //   ),
-    // ),
-
   ];
 
   @override
@@ -71,13 +56,7 @@ class _MainScreenState extends State<MainScreen> {
               ),
               BottomNavigationBarItem(
                 icon: Icon(
-                  value.index == 2 ? Icons.shopping_cart : Icons.shopping_cart_outlined,
-                ),
-                label: 'Keranjang',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(
-                  value.index == 3 ? Icons.person : Icons.person_outline,
+                  value.index == 2 ? Icons.person : Icons.person_outline,
                 ),
                 label: 'Profil',
               ),
