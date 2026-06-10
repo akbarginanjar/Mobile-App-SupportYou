@@ -1,11 +1,14 @@
+// lib/controllers/pelatihan_controller.dart (perbarui)
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/services/pelatihan_service.dart';
 import 'package:mobile_supportyou/services/riwayat_pelatihan_service.dart';
+import 'package:mobile_supportyou/controllers/purchased_batch_controller.dart';
 
 class PelatihanController extends GetxController {
   final PelatihanService _pelatihanService = PelatihanService();
   final RiwayatPelatihanService _riwayatService = RiwayatPelatihanService();
+  final PurchasedBatchController _purchasedBatchController = Get.find<PurchasedBatchController>();
   
   final isLoadingHome = true.obs;
   final pelatihanListHome = <Pelatihan>[].obs;
@@ -27,6 +30,7 @@ class PelatihanController extends GetxController {
 
   final hasAccess = false.obs;
   final purchasedPelatihanIds = <int>[].obs;
+  final purchasedBatchIds = <int>{}.obs;
   
   Future<void> loadPelatihanHome() async {
     try {
@@ -100,6 +104,8 @@ class PelatihanController extends GetxController {
       detailPelatihan.value = result;
       if (result != null) {
         hasAccess.value = purchasedPelatihanIds.contains(result.id);
+        await _purchasedBatchController.loadPurchasedBatchesForPelatihan(result.id);
+        purchasedBatchIds.assignAll(_purchasedBatchController.getPurchasedBatchIds(result.id));
       }
     } catch (e) {
       print('Error loading detail pelatihan: $e');

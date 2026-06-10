@@ -1,7 +1,9 @@
+// lib/views/pelatihan_screen/screen.dart (perbarui)
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/controllers/pelatihan_controller.dart';
+import 'package:mobile_supportyou/controllers/purchased_batch_controller.dart';
 import 'package:mobile_supportyou/models/pelatihan_model.dart';
 import 'package:mobile_supportyou/utils/image_helper.dart';
 import 'package:mobile_supportyou/views/checkout_screen/screen.dart';
@@ -42,7 +44,7 @@ class _PelatihanScreenState extends State<PelatihanScreen> {
   void _onDaftarSekarang(Pelatihan pelatihan) {
     final hasPublishedBatches = pelatihan.batches.where((b) => b.isPublished).isNotEmpty;
     final hasMainSchedule = pelatihan.startTime != null && pelatihan.startTime!.isNotEmpty;
-    
+
     if (hasPublishedBatches && !hasMainSchedule && _selectedBatch == null) {
       Get.snackbar(
         'Peringatan',
@@ -54,11 +56,23 @@ class _PelatihanScreenState extends State<PelatihanScreen> {
       );
       return;
     }
-    
+
+    if (_selectedBatch != null && controller.purchasedBatchIds.contains(_selectedBatch!.id)) {
+      Get.snackbar(
+        'Info',
+        'Anda sudah memiliki akses untuk batch ini',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
     Get.to(() => CheckoutScreen(
-      pelatihan: pelatihan,
-      selectedBatch: _selectedBatch,
-    ));
+          pelatihan: pelatihan,
+          selectedBatch: _selectedBatch,
+        ));
   }
 
   @override
@@ -88,7 +102,7 @@ class _PelatihanScreenState extends State<PelatihanScreen> {
           (section) => section.type == 'target',
           orElse: () => Section(title: '', content: '', type: ''),
         );
-        
+
         final experienceSection = pelatihan.sections.firstWhere(
           (section) => section.type == 'experience',
           orElse: () => Section(title: '', content: '', type: ''),
@@ -127,7 +141,8 @@ class _PelatihanScreenState extends State<PelatihanScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              if ((pelatihan.startTime != null && pelatihan.startTime!.isNotEmpty) || pelatihan.batches.isNotEmpty)
+              if ((pelatihan.startTime != null && pelatihan.startTime!.isNotEmpty) ||
+                  pelatihan.batches.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: ScheduleSection(
@@ -136,6 +151,7 @@ class _PelatihanScreenState extends State<PelatihanScreen> {
                     maxPeserta: pelatihan.maxPeserta,
                     batches: pelatihan.batches,
                     onBatchSelected: _onBatchSelected,
+                    purchasedBatchIds: controller.purchasedBatchIds,
                   ),
                 ),
               const SizedBox(height: 12),
@@ -183,6 +199,13 @@ class _PelatihanScreenState extends State<PelatihanScreen> {
         final pelatihan = controller.detailPelatihan.value;
         if (pelatihan == null) return const SizedBox.shrink();
 
+        final hasPublishedBatches = pelatihan.batches.where((b) => b.isPublished).isNotEmpty;
+        final hasMainSchedule = pelatihan.startTime != null && pelatihan.startTime!.isNotEmpty;
+        final isBatchSelected = !hasPublishedBatches || hasMainSchedule || _selectedBatch != null;
+        final isPurchased = _selectedBatch != null &&
+            controller.purchasedBatchIds.contains(_selectedBatch!.id);
+        final canRegister = !controller.hasAccess.value && isBatchSelected && !isPurchased;
+
         if (controller.hasAccess.value) {
           return Container(
             padding: const EdgeInsets.all(16),
@@ -220,7 +243,7 @@ class _PelatihanScreenState extends State<PelatihanScreen> {
             ),
           );
         }
-        
+
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -236,7 +259,7 @@ class _PelatihanScreenState extends State<PelatihanScreen> {
           child: SafeArea(
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: primary,
+                backgroundColor: canRegister ? primary : Colors.grey[400],
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -244,11 +267,11 @@ class _PelatihanScreenState extends State<PelatihanScreen> {
                 ),
                 elevation: 0,
               ),
-              onPressed: () => _onDaftarSekarang(pelatihan),
+              onPressed: canRegister ? () => _onDaftarSekarang(pelatihan) : null,
               icon: const Icon(Icons.flash_on, size: 20),
-              label: const Text(
-                'Daftar Sekarang',
-                style: TextStyle(
+              label: Text(
+                isPurchased ? 'Sudah Memiliki Akses Batch Ini' : 'Daftar Sekarang',
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
