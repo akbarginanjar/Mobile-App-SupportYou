@@ -8,6 +8,7 @@ import 'package:mobile_supportyou/views/home_screen/hero_section.dart';
 import 'package:mobile_supportyou/views/home_screen/kategori.dart';
 import 'package:mobile_supportyou/views/home_screen/pelatihan_section.dart';
 import 'package:mobile_supportyou/views/home_screen/ebook_section.dart';
+import 'package:mobile_supportyou/views/home_screen/blog_section.dart';
 import 'package:mobile_supportyou/views/search_screen/screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -131,6 +132,9 @@ class HomeScreen extends StatelessWidget {
                 const PelatihanSection(),
                 const SizedBox(height: 20),
                 const EbookSection(),
+                const SizedBox(height: 16),
+                const BlogSection(),
+                const SizedBox(height: 16),
               ]),
             ),
           ],
