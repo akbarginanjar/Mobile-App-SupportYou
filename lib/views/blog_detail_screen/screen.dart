@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
-import 'package:mobile_supportyou/controllers/blog_controller.dart';
+import 'package:mobile_supportyou/controllers/blog_detail_controller.dart';
 import 'package:mobile_supportyou/views/blog_detail_screen/widgets/related_blog_card.dart';
 import 'package:mobile_supportyou/views/blog_detail_screen/widgets/share_button.dart';
 
-class BlogDetailScreen extends StatelessWidget {
+class BlogDetailScreen extends StatefulWidget {
   final String slug;
 
   const BlogDetailScreen({
@@ -15,19 +15,37 @@ class BlogDetailScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final BlogController controller = Get.find<BlogController>();
+  State<BlogDetailScreen> createState() => _BlogDetailScreenState();
+}
 
+class _BlogDetailScreenState extends State<BlogDetailScreen> {
+  late BlogDetailController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.isRegistered<BlogDetailController>(tag: widget.slug)
+        ? Get.find<BlogDetailController>(tag: widget.slug)
+        : Get.put(BlogDetailController(), tag: widget.slug);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.loadBlogDetail(slug);
+      controller.loadBlogDetail(widget.slug);
     });
+  }
 
+  @override
+  void dispose() {
+    Get.delete<BlogDetailController>(tag: widget.slug);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Obx(() {
           return Text(
-            controller.detailBlog.value?.title ?? 'Detail Artikel',
+            controller.detailBlog.value?.title ?? 'Detail Blog',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -54,7 +72,7 @@ class BlogDetailScreen extends StatelessWidget {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 16),
-                Text('Memuat artikel...'),
+                Text('Memuat blog...'),
               ],
             ),
           );
@@ -73,7 +91,7 @@ class BlogDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Artikel tidak ditemukan',
+                  'Blog tidak ditemukan',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -82,7 +100,7 @@ class BlogDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => Get.back(),
+                  onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
                     shape: RoundedRectangleBorder(
@@ -195,7 +213,7 @@ class BlogDetailScreen extends StatelessWidget {
               if (controller.relatedBlogs.isNotEmpty) ...[
                 const SizedBox(height: 24),
                 Text(
-                  'Artikel Terkait',
+                  'Blog Terkait',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -209,12 +227,7 @@ class BlogDetailScreen extends StatelessWidget {
                     separatorBuilder: (context, index) => const SizedBox(width: 12),
                     itemBuilder: (context, index) {
                       final related = controller.relatedBlogs[index];
-                      return RelatedBlogCard(
-                        blog: related,
-                        onTap: () {
-                          Get.to(() => BlogDetailScreen(slug: related.slug));
-                        },
-                      );
+                      return RelatedBlogCard(blog: related);
                     },
                   ),
                 ),

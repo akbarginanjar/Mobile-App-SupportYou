@@ -55,7 +55,7 @@ class BlogSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Baca Artikel & Blog',
+                      'Baca Blog',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

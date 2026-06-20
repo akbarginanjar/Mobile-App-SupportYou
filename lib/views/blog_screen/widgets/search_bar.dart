@@ -36,7 +36,7 @@ class BlogSearchBar extends StatelessWidget {
             }
           },
           decoration: InputDecoration(
-            hintText: 'Cari artikel...',
+            hintText: 'Cari blog...',
             hintStyle: TextStyle(
               color: Colors.grey[400],
               fontSize: 14,

@@ -43,7 +43,7 @@ class BlogScreen extends StatelessWidget {
                     children: [
                       CircularProgressIndicator(),
                       SizedBox(height: 16),
-                      Text('Memuat artikel...'),
+                      Text('Memuat blog...'),
                     ],
                   ),
                 );
@@ -61,7 +61,7 @@ class BlogScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Belum ada artikel',
+                        'Belum ada blog',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,

@@ -27,7 +27,7 @@ class ShareButton extends StatelessWidget {
       await Clipboard.setData(ClipboardData(text: _shareUrl));
       Get.snackbar(
         'Berhasil',
-        'Link artikel telah disalin',
+        'Link blog telah disalin',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: success,
         colorText: Colors.white,

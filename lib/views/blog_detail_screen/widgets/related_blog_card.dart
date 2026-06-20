@@ -1,16 +1,16 @@
 // lib/views/blog_detail_screen/widgets/related_blog_card.dart
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:mobile_supportyou/config/theme.dart';
 import 'package:mobile_supportyou/models/blog_model.dart';
+import 'package:mobile_supportyou/views/blog_detail_screen/screen.dart';
 
 class RelatedBlogCard extends StatelessWidget {
   final Blog blog;
-  final VoidCallback onTap;
 
   const RelatedBlogCard({
     super.key,
     required this.blog,
-    required this.onTap,
   });
 
   String _formatDate(String dateTimeString) {
@@ -28,21 +28,24 @@ class RelatedBlogCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 150,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+    return Container(
+      width: 150,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () {
+          Get.to(() => BlogDetailScreen(slug: blog.slug), preventDuplicates: false);
+        },
+        borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -15,9 +15,6 @@ class BlogController extends GetxController {
   final selectedCategory = 'Semua'.obs;
   final categories = <String>[].obs;
 
-  final isLoadingDetail = false.obs;
-  final detailBlog = Rx<Blog?>(null);
-  final relatedBlogs = <Blog>[].obs;
 
   @override
   void onInit() {
@@ -80,24 +77,6 @@ class BlogController extends GetxController {
     await loadBlogs();
   }
 
-  Future<void> loadBlogDetail(String slug) async {
-    try {
-      isLoadingDetail.value = true;
-      final blog = await _blogService.getBlogBySlug(slug);
-      detailBlog.value = blog;
-
-      if (blog != null) {
-        final related = await _blogService.getRelatedBlogs(slug);
-        relatedBlogs.assignAll(related);
-      }
-    } catch (e) {
-      print('Error loading blog detail: $e');
-      detailBlog.value = null;
-      relatedBlogs.clear();
-    } finally {
-      isLoadingDetail.value = false;
-    }
-  }
 
   void clearSearch() {
     searchQuery.value = '';
